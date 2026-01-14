@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.asupg.asupgservice.validation.ValidationDoc;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,7 +27,7 @@ public class CreateCompanyRequest {
     private Long monthlyRate;
 
     @Future(message = ValidationDoc.BILLING_START_DATE_FUTURE)
-    private LocalDate billingStartDate;
+    private YearMonth billingStartMonth;
 
     @Email(message = ValidationDoc.EMAIL_VALID_MESSAGE)
     private String email;

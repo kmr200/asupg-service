@@ -5,10 +5,7 @@ import com.azure.spring.data.cosmos.core.mapping.PartitionKey;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 
 import java.math.BigDecimal;
@@ -45,29 +42,20 @@ public class TransactionDTO {
 
     private String description;
 
+    private TransactionType transactionType;
+
+    private ReconciliationDTO reconciliation;
+
     @JsonProperty("_etag")
     @JsonIgnore
     private String etag;
 
-    public TransactionDTO(
-            LocalDate date,
-            String transactionId,
-            String counterpartyName,
-            String counterpartyInn,
-            String accountNumber,
-            String mfo,
-            BigDecimal amount,
-            String description
-    ) {
-        this.id = transactionId;
-        this.date = date;
-        this.transactionId = transactionId;
-        this.counterpartyName = counterpartyName;
-        this.counterpartyInn = counterpartyInn;
-        this.accountNumber = accountNumber;
-        this.mfo = mfo;
-        this.amount = amount;
-        this.description = description;
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public enum TransactionType {
+        BANK_PAYMENT("BANK_PAYMENT"),      // Payment from customer (external)
+        MONTHLY_CHARGE("MONTHLY_CHARGE");
+        private String value;
     }
 
     public void setId(String id) {

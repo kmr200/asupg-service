@@ -27,7 +27,7 @@ public class CompanyController {
                 createCompanyRequest.getInn(),
                 createCompanyRequest.getName(),
                 createCompanyRequest.getMonthlyRate(),
-                createCompanyRequest.getBillingStartDate(),
+                createCompanyRequest.getBillingStartMonth(),
                 createCompanyRequest.getEmail(),
                 createCompanyRequest.getPhone()
         );

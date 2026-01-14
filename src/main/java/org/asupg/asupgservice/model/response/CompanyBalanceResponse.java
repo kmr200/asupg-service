@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 @Data
@@ -15,8 +16,6 @@ public class CompanyBalanceResponse {
     private String inn;
     private String name;
     private BigDecimal balance;
-    private BigDecimal totalPaid;
-    private BigDecimal totalCharges;
     private Long monthsElapsed;
     private List<MonthlyCharge> monthlyBreakdown;
     private BillingInfo billingInfo;
@@ -41,8 +40,6 @@ public class CompanyBalanceResponse {
             String inn,
             String name,
             BigDecimal balance,
-            BigDecimal totalPaid,
-            BigDecimal totalCharges,
             Long monthsElapsed,
             List<MonthlyCharge> monthlyBreakdown,
             BillingInfo billingInfo
@@ -50,8 +47,6 @@ public class CompanyBalanceResponse {
         this.inn = inn;
         this.name = name;
         this.balance = balance;
-        this.totalPaid = totalPaid;
-        this.totalCharges = totalCharges;
         this.monthsElapsed = monthsElapsed;
         this.monthlyBreakdown = monthlyBreakdown;
         this.billingInfo = billingInfo;
@@ -72,7 +67,7 @@ public class CompanyBalanceResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BillingInfo {
-        private LocalDate billingStartDate;
+        private YearMonth billingStartMonth;
         private BigDecimal monthlyRate;
     }
 

@@ -14,4 +14,9 @@ public interface TransactionRepository extends CosmosRepository<TransactionDTO, 
     @Query("SELECT VALUE SUM(c.amount) FROM c WHERE c.counterpartyInn = @inn")
     public List<BigDecimal> sumAmountByInn(String inn);
 
+    public List<TransactionDTO> findAllByCounterpartyInnAndTransactionType(
+            String counterpartyInn,
+            TransactionDTO.TransactionType type
+    );
+
 }

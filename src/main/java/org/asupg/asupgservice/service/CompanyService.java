@@ -1,9 +1,9 @@
 package org.asupg.asupgservice.service;
 
-import lombok.extern.slf4j.Slf4j;
 import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.CompanyDTO;
 import org.asupg.asupgservice.model.CompanyStatus;
+import org.asupg.asupgservice.model.TransactionDTO;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.repository.CompanyRepository;
 import org.asupg.asupgservice.repository.TransactionRepository;
@@ -13,12 +13,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class CompanyService {
@@ -51,7 +52,7 @@ public class CompanyService {
             String inn,
             String name,
             Long monthlyRate,
-            LocalDate billingStartDate,
+            YearMonth billingStartMonth,
             String email,
             String phone
     ) {
@@ -62,8 +63,8 @@ public class CompanyService {
             throw new AppException(409, "Validation failed", "Company with id: " + inn + " already exists");
         }
 
-        if (billingStartDate == null) {
-            billingStartDate = LocalDate.now().plusYears(billingFreePeriod);
+        if (billingStartMonth == null) {
+            billingStartMonth = YearMonth.now(ZoneOffset.UTC).plusYears(billingFreePeriod);
         }
 
         if (monthlyRate == null) {
@@ -76,7 +77,7 @@ public class CompanyService {
                         name,
                         BigDecimal.valueOf(monthlyRate),
                         LocalDate.now(),
-                        billingStartDate,
+                        billingStartMonth,
                         CompanyStatus.ACTIVE,
                         email,
                         phone
@@ -94,99 +95,55 @@ public class CompanyService {
                 () -> new AppException(404, "Validation failed", "Company with id: " + id + " not found")
         );
 
-        // Calculate total paid from RECONCILED transactions
-        BigDecimal totalPaid = calculateTotalPaidFromTransactions(id);
-
-        // Calculate charges
-        BigDecimal totalCharges = calculateTotalCharges(
-                company.getBillingStartDate(),
-                company.getMonthlyRate()
+        List<TransactionDTO> monthlyChargeTransactions = transactionRepository.findAllByCounterpartyInnAndTransactionType(
+                id,
+                TransactionDTO.TransactionType.MONTHLY_CHARGE
         );
 
-        // Calculate balance
-        BigDecimal balance = totalPaid.subtract(totalCharges)
-                .setScale(2, RoundingMode.HALF_UP);
+        Map<YearMonth, List<TransactionDTO>> groupedByMonth =
+                monthlyChargeTransactions.stream()
+                        .collect(Collectors.groupingBy(
+                                transaction -> YearMonth.from(transaction.getDate())
+                        ));
 
-        logger.debug("Balance calculation for {}: Paid={}, Charges={}, Balance={}",
-                id, totalPaid, totalCharges, balance);
+        YearMonth now = YearMonth.now(ZoneOffset.UTC);
 
-        // Calculate monthly breakdown
-        List<CompanyBalanceResponse.MonthlyCharge> breakdown =
-                calculateMonthlyBreakdown(company.getBillingStartDate(), company.getMonthlyRate());
+        List<CompanyBalanceResponse.MonthlyCharge> monthlyBreakdown =
+                groupedByMonth.entrySet().stream()
+                        .map(entry -> {
+                            YearMonth month = entry.getKey();
+                            BigDecimal totalForMonth = entry.getValue().stream()
+                                    .map(TransactionDTO::getAmount)
+                                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Create billing info
-        CompanyBalanceResponse.BillingInfo billingInfo = new CompanyBalanceResponse.BillingInfo(
-                company.getBillingStartDate(),
-                company.getMonthlyRate()
-        );
+                            return new CompanyBalanceResponse.MonthlyCharge(
+                                    month.toString(),
+                                    totalForMonth,
+                                    month.atDay(1),
+                                    month.atEndOfMonth(),
+                                    month.equals(now) ? "CURRENT" : "PAST"
+                            );
+                        })
+                        .toList();
+
+        BigDecimal totalCharges = monthlyBreakdown.stream()
+                .map(CompanyBalanceResponse.MonthlyCharge::getCharge)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long monthsElapsed = monthlyBreakdown.size();
 
         return new CompanyBalanceResponse(
                 company.getInn(),
                 company.getName(),
-                balance,
-                totalPaid,
-                totalCharges,
-                calculateMonthsElapsed(company.getBillingStartDate()),
-                breakdown,
-                billingInfo
+                company.getCurrentBalance(),
+                monthsElapsed,
+                monthlyBreakdown,
+                new CompanyBalanceResponse.BillingInfo(
+                        company.getBillingStartMonth(),
+                        company.getMonthlyRate()
+                )
         );
-    }
 
-    private List<CompanyBalanceResponse.MonthlyCharge> calculateMonthlyBreakdown(
-            LocalDate billingStartDate,
-            BigDecimal monthlyRate) {
-
-        if (billingStartDate == null || monthlyRate == null) {
-            return List.of();
-        }
-
-        LocalDate now = LocalDate.now();
-
-        // If billing hasn't started yet
-        if (now.isBefore(billingStartDate)) {
-            return List.of();
-        }
-
-        List<CompanyBalanceResponse.MonthlyCharge> breakdown = new ArrayList<>();
-        LocalDate currentMonth = billingStartDate.withDayOfMonth(1);
-        LocalDate today = LocalDate.now();
-
-        while (!currentMonth.isAfter(today)) {
-            LocalDate periodStart = currentMonth.isBefore(billingStartDate)
-                    ? billingStartDate
-                    : currentMonth;
-
-            LocalDate periodEnd = currentMonth.plusMonths(1).minusDays(1);
-            if (periodEnd.isAfter(today)) {
-                periodEnd = today;
-            }
-
-            // Determine status
-            String status;
-            if (currentMonth.isAfter(today.withDayOfMonth(1))) {
-                status = "FUTURE";
-            } else if (currentMonth.isBefore(today.withDayOfMonth(1))) {
-                status = "PAST";
-            } else {
-                status = "CURRENT";
-            }
-
-            // Only add if billing has started for this month
-            if (!periodStart.isAfter(today)) {
-                breakdown.add(new CompanyBalanceResponse.MonthlyCharge(
-                        currentMonth.format(DateTimeFormatter.ofPattern("yyyy-MM")),
-                        monthlyRate.setScale(2, RoundingMode.HALF_UP),
-                        periodStart,
-                        periodEnd,
-                        status
-                ));
-            }
-
-            currentMonth = currentMonth.plusMonths(1);
-        }
-
-        logger.debug("Generated {} monthly charge entries", breakdown.size());
-        return breakdown;
     }
 
     private Long calculateMonthsElapsed(LocalDate billingStartDate) {
@@ -194,41 +151,12 @@ public class CompanyService {
             return null;
         }
 
-        LocalDate now = LocalDate.now();
+        LocalDate now = LocalDate.now(ZoneOffset.UTC);
         if (now.isBefore(billingStartDate)) {
             return 0L;
         }
 
         return ChronoUnit.MONTHS.between(billingStartDate, now);
-    }
-
-    private BigDecimal calculateTotalPaidFromTransactions(String inn) {
-        logger.debug("Calculating total paid from transactions for INN: {}", inn);
-
-        List<BigDecimal> result = transactionRepository.sumAmountByInn(inn);
-        BigDecimal total = (result != null && !result.isEmpty() && result.getFirst() != null)
-                ? result.getFirst()
-                : BigDecimal.ZERO;
-
-        logger.debug("Total reconciled payments for {}: {}", inn, total);
-        return total.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal calculateTotalCharges(
-            LocalDate billingStartDate,
-            BigDecimal monthlyRate
-    ) {
-        LocalDate now = LocalDate.now();
-
-        if (now.isBefore(billingStartDate)) {
-            return BigDecimal.ZERO;
-        }
-
-        long monthCount = ChronoUnit.MONTHS.between(billingStartDate, now);
-
-        return monthlyRate
-                .multiply(BigDecimal.valueOf(monthCount))
-                .setScale(2, RoundingMode.HALF_UP);
     }
 
 }

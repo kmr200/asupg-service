@@ -13,6 +13,8 @@ import org.springframework.data.annotation.Id;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.Objects;
 
 @NoArgsConstructor
@@ -37,8 +39,16 @@ public class CompanyDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate subscriptionStartDate;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    private LocalDate billingStartDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
+    private YearMonth billingStartMonth;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
+    private YearMonth lastBilledMonth;
+
+    private BigDecimal currentBalance;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    private LocalDateTime balanceUpdatedAt;
 
     private CompanyStatus status;
 
@@ -55,7 +65,7 @@ public class CompanyDTO {
             String name,
             BigDecimal monthlyRate,
             LocalDate subscriptionStartDate,
-            LocalDate billingStartDate,
+            YearMonth billingStartMonth,
             CompanyStatus status,
             String email,
             String phone
@@ -65,7 +75,7 @@ public class CompanyDTO {
         this.name = name;
         this.monthlyRate = monthlyRate;
         this.subscriptionStartDate = subscriptionStartDate;
-        this.billingStartDate = billingStartDate;
+        this.billingStartMonth = billingStartMonth;
         this.status = status;
         this.email = email;
         this.phone = phone;
