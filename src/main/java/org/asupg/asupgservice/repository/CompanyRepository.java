@@ -5,5 +5,6 @@ import org.asupg.asupgservice.model.CompanyDTO;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface CompanyRepository extends CosmosRepository<CompanyDTO, String> {
+public interface CompanyRepository extends CosmosRepository<CompanyDTO, String>, CompanyRepositoryCustom {
+
 }

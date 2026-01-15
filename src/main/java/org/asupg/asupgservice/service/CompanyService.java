@@ -1,15 +1,17 @@
 package org.asupg.asupgservice.service;
 
+import com.azure.core.http.rest.PagedResponse;
+import com.azure.cosmos.CosmosException;
 import org.asupg.asupgservice.exception.AppException;
-import org.asupg.asupgservice.model.CompanyDTO;
-import org.asupg.asupgservice.model.CompanyStatus;
-import org.asupg.asupgservice.model.TransactionDTO;
+import org.asupg.asupgservice.model.*;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
+import org.asupg.asupgservice.model.response.CompanyDebtResponse;
 import org.asupg.asupgservice.repository.CompanyRepository;
 import org.asupg.asupgservice.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -126,10 +128,6 @@ public class CompanyService {
                         })
                         .toList();
 
-        BigDecimal totalCharges = monthlyBreakdown.stream()
-                .map(CompanyBalanceResponse.MonthlyCharge::getCharge)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         long monthsElapsed = monthlyBreakdown.size();
 
         return new CompanyBalanceResponse(
@@ -146,17 +144,42 @@ public class CompanyService {
 
     }
 
-    private Long calculateMonthsElapsed(LocalDate billingStartDate) {
-        if (billingStartDate == null) {
-            return null;
+    public CompanyDebtResponse getCompaniesInDebt(
+            BigDecimal minDebt,
+            BigDecimal maxDebt,
+            int limit,
+            String continuationToken,
+            SortOrder sortOrder
+    ) {
+        CosmosPageResponse<CompanyDTO> page;
+        try {
+             page = companyRepository.findCompaniesInDebt(
+                    minDebt,
+                    maxDebt,
+                    limit,
+                    continuationToken,
+                    sortOrder
+            );
+        } catch (CosmosException e) {
+            if (e.getMessage().contains("INVALID JSON in continuation token")) {
+                throw new AppException(400, "Validation failed", "Invalid continuation token");
+            } else {
+                logger.warn(e.getMessage());
+                throw e;
+            }
         }
+        List<CompanyDebtResponse.CompanyDebtDetails> data = page.getItems().stream()
+                .map(
+                        company -> new CompanyDebtResponse.CompanyDebtDetails(
+                                company.getInn(),
+                                company.getName(),
+                                company.getCurrentBalance()
+                        )
+                ).toList();
 
-        LocalDate now = LocalDate.now(ZoneOffset.UTC);
-        if (now.isBefore(billingStartDate)) {
-            return 0L;
-        }
-
-        return ChronoUnit.MONTHS.between(billingStartDate, now);
+        return new CompanyDebtResponse(
+                data,
+                page.getContinuationToken()
+        );
     }
-
 }

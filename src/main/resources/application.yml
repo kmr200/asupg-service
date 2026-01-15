@@ -12,6 +12,7 @@ azure:
     database: ${azure.cosmos.database}
     endpoint: ${azure.cosmos.endpoint}
     key: ${azure.cosmos.key}
+    container-companies: Companies
 
 asupg:
   billing:
