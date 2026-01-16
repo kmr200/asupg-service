@@ -18,3 +18,8 @@ asupg:
   billing:
     free-period: 1 # Amount of years for which companies are free to use the service
     monthly-rate: 100000 # Default monthly rate which will be used unless specified otherwise
+
+security:
+  jwt:
+    expireInMinutes: 15
+    secret: a;slkdfjanva;lsejtnakjsnvjal;sj;fd

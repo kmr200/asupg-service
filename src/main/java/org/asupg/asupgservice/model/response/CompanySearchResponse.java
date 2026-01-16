@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.asupg.asupgservice.model.CompanyDTO;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Getter

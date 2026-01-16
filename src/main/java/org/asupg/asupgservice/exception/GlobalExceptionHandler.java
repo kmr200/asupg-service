@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
                 ErrorResponse.builder()
                         .timestamp(LocalDateTime.now())
                         .status(e.getStatusCode())
-                        .error("Validation Failed")
+                        .error(e.getError())
                         .message(e.getMessage())
                         .build(),
                 HttpStatus.valueOf(e.getStatusCode())

@@ -18,6 +18,7 @@ public class AppException extends RuntimeException {
 
     public AppException(int statusCode, String error, String message) {
         this.statusCode = statusCode;
+        this.error = error;
         this.message = message;
     }
 }

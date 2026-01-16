@@ -20,7 +20,6 @@ import java.util.Objects;
 public class TransactionDTO {
 
     @Id
-    @JsonProperty("id")
     @JsonIgnore
     private String id;
 
