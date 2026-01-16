@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.asupg.asupgservice.validation.ValidationDoc;
 
-import java.time.LocalDate;
 import java.time.YearMonth;
 
 @NoArgsConstructor

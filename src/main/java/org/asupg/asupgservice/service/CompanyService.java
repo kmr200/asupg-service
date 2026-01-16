@@ -1,24 +1,25 @@
 package org.asupg.asupgservice.service;
 
-import com.azure.core.http.rest.PagedResponse;
 import com.azure.cosmos.CosmosException;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.*;
+import org.asupg.asupgservice.model.request.CompanySearchRequest;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
+import org.asupg.asupgservice.model.response.CompanySearchResponse;
 import org.asupg.asupgservice.repository.CompanyRepository;
 import org.asupg.asupgservice.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -153,7 +154,7 @@ public class CompanyService {
     ) {
         CosmosPageResponse<CompanyDTO> page;
         try {
-             page = companyRepository.findCompaniesInDebt(
+            page = companyRepository.findCompaniesInDebt(
                     minDebt,
                     maxDebt,
                     limit,
@@ -181,5 +182,47 @@ public class CompanyService {
                 data,
                 page.getContinuationToken()
         );
+    }
+
+    public CompanySearchResponse getCompanies(
+            BigDecimal minBalance,
+            BigDecimal maxBalance,
+            LocalDate subscriptionStartDateFrom,
+            LocalDate subscriptionStartDateTo,
+            YearMonth billingStartMonthFrom,
+            YearMonth billingStartMonthTo,
+            CompanyStatus status,
+            Integer limit,
+            String continuationToken,
+            CompanySearchRequest.SortBy sortBy,
+            SortOrder sortOrder
+    ) {
+
+        CosmosPageResponse<CompanyDTO> page;
+
+        try {
+            page = companyRepository.findCompanies(
+                    minBalance,
+                    maxBalance,
+                    subscriptionStartDateFrom,
+                    subscriptionStartDateTo,
+                    billingStartMonthFrom,
+                    billingStartMonthTo,
+                    status,
+                    limit,
+                    continuationToken,
+                    sortBy,
+                    sortOrder
+            );
+        } catch (CosmosException e) {
+            if (e.getMessage().contains("INVALID JSON in continuation token")) {
+                throw new AppException(400, "Validation failed", "Invalid continuation token");
+            } else {
+                logger.warn(e.getMessage());
+                throw e;
+            }
+        }
+
+        return new CompanySearchResponse(page.getItems(), page.getContinuationToken());
     }
 }

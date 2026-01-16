@@ -1,5 +1,8 @@
 package org.asupg.asupgservice.model.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,9 +18,17 @@ import java.math.BigDecimal;
 public class CompanyDebtSearchRequest {
 
     BigDecimal minDebt;
+
     BigDecimal maxDebt;
-    Integer limit;
+
+    @Min(1)
+    @Max(100)
+    @JsonProperty(defaultValue = "10")
+    Integer limit = 10;
+
     String continuationToken;
-    SortOrder sortOrder;
+
+    @JsonProperty(defaultValue = "DESC")
+    SortOrder sortOrder = SortOrder.DESC;
 
 }
