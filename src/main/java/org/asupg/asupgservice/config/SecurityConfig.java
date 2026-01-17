@@ -1,8 +1,8 @@
 package org.asupg.asupgservice.config;
 
-import lombok.RequiredArgsConstructor;
 import org.asupg.asupgservice.filter.JwtAuthenticationFilter;
 import org.asupg.asupgservice.service.CustomUserDetailsService;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,14 +22,21 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableConfigurationProperties(SecurityProperties.class)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomUserDetailsService customUserDetailsService;
+    private final SecurityProperties securityProperties;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            CustomUserDetailsService customUserDetailsService,
+            SecurityProperties securityProperties
+    ) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.customUserDetailsService = customUserDetailsService;
+        this.securityProperties = securityProperties;
     }
 
     @Bean
@@ -42,7 +49,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(
                         auth -> auth
-                                .requestMatchers("/v1/auth/**").permitAll()
+                                .requestMatchers(
+                                        securityProperties.getPublicEndpoints()
+                                                .toArray(String[]::new)
+                                ).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

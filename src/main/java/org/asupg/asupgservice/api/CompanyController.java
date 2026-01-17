@@ -10,6 +10,7 @@ import org.asupg.asupgservice.model.response.CompanySearchResponse;
 import org.asupg.asupgservice.service.CompanyService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +25,7 @@ public class CompanyController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<CompanyDTO> createCompany(
             @Validated @RequestBody CreateCompanyRequest createCompanyRequest
     ) {
@@ -40,6 +42,7 @@ public class CompanyController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<CompanySearchResponse> getCompanies(
             @RequestBody @Validated CompanySearchRequest companyDebtSearchRequest
     ) {
@@ -61,6 +64,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<CompanyDTO> getCompany(@PathVariable String id) {
         CompanyDTO company = companyService.getCompany(id);
 
@@ -68,6 +72,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}/balance")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<CompanyBalanceResponse> getCompanyBalance(@PathVariable String id) {
         CompanyBalanceResponse companyBalance = companyService.getCompanyBalance(id);
 
@@ -75,6 +80,7 @@ public class CompanyController {
     }
 
     @GetMapping("/debtors")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<CompanyDebtResponse> getCompanyDebtors(
             @RequestBody @Validated CompanyDebtSearchRequest companyDebtSearchRequest
     ) {

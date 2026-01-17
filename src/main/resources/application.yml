@@ -22,4 +22,6 @@ asupg:
 security:
   jwt:
     expireInMinutes: 15
-    secret: a;slkdfjanva;lsejtnakjsnvjal;sj;fd
+    secret: ${security.jwt.secret}
+  public-endpoints:
+    - /v1/auth/**

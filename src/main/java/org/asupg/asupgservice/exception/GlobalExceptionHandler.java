@@ -6,12 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +24,17 @@ public class GlobalExceptionHandler {
     public static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(AppException.class)
-    public ResponseEntity<ErrorResponse> handleException(AppException e) {
+    public ResponseEntity<ErrorResponse> handleException(
+            AppException e,
+            HttpServletRequest request
+    ) {
         return new ResponseEntity<>(
                 ErrorResponse.builder()
                         .timestamp(LocalDateTime.now())
                         .status(e.getStatusCode())
                         .error(e.getError())
                         .message(e.getMessage())
+                        .path(request.getRequestURI())
                         .build(),
                 HttpStatus.valueOf(e.getStatusCode())
         );
@@ -63,6 +69,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            AuthorizationDeniedException e,
+            HttpServletRequest request
+    ) {
+        logger.error("Access denied: {}", e.getMessage());
+
+        return new ResponseEntity<>(
+                ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(403)
+                        .error("Forbidden")
+                        .message("Access Denied")
+                        .path(request.getRequestURI())
+                        .build(),
+                HttpStatus.FORBIDDEN
+        );
     }
 
 }
