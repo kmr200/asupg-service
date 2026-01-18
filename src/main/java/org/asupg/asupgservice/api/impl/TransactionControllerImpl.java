@@ -1,0 +1,32 @@
+package org.asupg.asupgservice.api.impl;
+
+import org.asupg.asupgservice.api.TransactionController;
+import org.asupg.asupgservice.model.TransactionDTO;
+import org.asupg.asupgservice.service.TransactionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/v1/transactions")
+public class TransactionControllerImpl implements TransactionController {
+
+    private final TransactionService transactionService;
+
+    public TransactionControllerImpl(TransactionService transactionService) {
+        this.transactionService = transactionService;
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<TransactionDTO> getTransaction(@PathVariable String id) {
+        TransactionDTO transaction = transactionService.getTransactionById(id);
+
+        return new ResponseEntity<>(transaction, HttpStatus.OK);
+    }
+
+}

@@ -1,31 +1,61 @@
 package org.asupg.asupgservice.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.asupg.asupgservice.model.TransactionDTO;
-import org.asupg.asupgservice.service.TransactionService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequestMapping("/v1/transactions")
-public class TransactionController {
+@Tag(name = "Transaction endpoints")
+public interface TransactionController {
 
-    private final TransactionService transactionService;
-
-    public TransactionController(TransactionService transactionService) {
-        this.transactionService = transactionService;
-    }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<Object> getTransaction(@PathVariable String id) {
-        TransactionDTO transaction = transactionService.getTransactionById(id);
-
-        return new ResponseEntity<>(transaction, HttpStatus.OK);
-    }
+    @Operation(
+            summary = "Get transaction", description = "Retrieves a transaction by its transactionId", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = TransactionDTO.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 404,
+                                        "error": "Invalid transaction id",
+                                        "message": "Transaction with id: transactionId not found",
+                                        "path": "/api/asupg-service/v1/transactions/transactionId"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<TransactionDTO> getTransaction(String id);
 
 }

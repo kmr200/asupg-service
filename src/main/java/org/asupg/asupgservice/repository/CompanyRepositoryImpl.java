@@ -45,8 +45,8 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
 
     @Override
     public CosmosPageResponse<CompanyDTO> findCompaniesInDebt(
-            BigDecimal minDebt,
-            BigDecimal maxDebt,
+            BigDecimal minBalance,
+            BigDecimal maxBalance,
             int limit,
             String continuationToken,
             SortOrder sortOrder
@@ -56,13 +56,13 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
         );
         List<SqlParameter> parameters = new ArrayList<>();
 
-        if (minDebt != null) {
-            query.append(" AND c.currentBalance >= @minDebt ");
-            parameters.add(new SqlParameter("@minDebt", minDebt));
+        if (minBalance != null) {
+            query.append(" AND c.currentBalance >= @minBalance ");
+            parameters.add(new SqlParameter("@minBalance", minBalance));
         }
-        if (maxDebt != null) {
-            query.append(" AND c.currentBalance <= @maxDebt ");
-            parameters.add(new SqlParameter("@maxDebt", maxDebt));
+        if (maxBalance != null) {
+            query.append(" AND c.currentBalance <= @maxBalance ");
+            parameters.add(new SqlParameter("@maxBalance", maxBalance));
         }
 
         query.append(" ORDER BY c.currentBalance ");

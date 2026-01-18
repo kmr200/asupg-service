@@ -146,8 +146,8 @@ public class CompanyService {
     }
 
     public CompanyDebtResponse getCompaniesInDebt(
-            BigDecimal minDebt,
-            BigDecimal maxDebt,
+            BigDecimal minBalance,
+            BigDecimal maxBalance,
             int limit,
             String continuationToken,
             SortOrder sortOrder
@@ -155,8 +155,8 @@ public class CompanyService {
         CosmosPageResponse<CompanyDTO> page;
         try {
             page = companyRepository.findCompaniesInDebt(
-                    minDebt,
-                    maxDebt,
+                    minBalance,
+                    maxBalance,
                     limit,
                     continuationToken,
                     sortOrder

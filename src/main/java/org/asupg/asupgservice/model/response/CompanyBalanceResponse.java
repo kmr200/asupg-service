@@ -1,5 +1,6 @@
 package org.asupg.asupgservice.model.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,13 +13,28 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Response class for requesting companies balance")
 public class CompanyBalanceResponse {
+
+    @Schema(description = "INN of the company to be created", example = "123456789")
     private String inn;
+
+    @Schema(description = "Name of the company to be created", example = "OOO \"TEST\"")
     private String name;
+
+    @Schema(description = "Current balance of the company", example = "200000")
     private BigDecimal balance;
+
+    @Schema(description = "How many months was company charged for")
     private Long monthsElapsed;
+
+    @Schema(description = "Monthly breakdown of each monthly payment company made")
     private List<MonthlyCharge> monthlyBreakdown;
+
+    @Schema(description = "General billing information")
     private BillingInfo billingInfo;
+
+    @Schema(description = "Current status of companies balance. DEBT if in debt and CREDIT if positive.", example = "CREDIT")
     private BalanceStatus balanceStatus;
 
     // Simple constructor
@@ -56,10 +72,20 @@ public class CompanyBalanceResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class MonthlyCharge {
-        private String period;              // "2024-01" or "January 2024"
-        private BigDecimal charge;          // Amount charged this month
-        private LocalDate startDate;        // First day of billing period
-        private LocalDate endDate;          // Last day of billing period
+
+        @Schema(description = "For which period the company was charged", example = "2024-01")
+        private String period;
+
+        @Schema(description = "Amount charged for the specified period", example = "100000")
+        private BigDecimal charge;
+
+        @Schema(description = "First day of the billing period", example = "2024-01-01")
+        private LocalDate startDate;
+
+        @Schema(description = "Last day of the billing period", example = "2024-01-31")
+        private LocalDate endDate;
+
+        @Schema(description = "Is the period specified current or was in past", example = "CURRENT")
         private String status;
     }
 
@@ -67,7 +93,11 @@ public class CompanyBalanceResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class BillingInfo {
+
+        @Schema(description = "When did the company start paying", example = "2025-01")
         private YearMonth billingStartMonth;
+
+        @Schema(description = "How much does company pay each month", example = "100000")
         private BigDecimal monthlyRate;
     }
 

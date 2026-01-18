@@ -1,65 +1,47 @@
 package org.asupg.asupgservice.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.request.LoginRequest;
 import org.asupg.asupgservice.model.response.LoginResponse;
-import org.asupg.asupgservice.service.JwtTokenGenerator;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
-@RestController
-@RequestMapping("/v1/auth")
-@RequiredArgsConstructor
-public class AuthController {
+@Tag(name = "Authentication endpoints")
+public interface AuthController {
 
-    @Value("${security.jwt.expireInMinutes:15}")
-    private int expireInMinutes;
-
-    private final AuthenticationManager authenticationManager;
-    private final JwtTokenGenerator jwtTokenGenerator;
-
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
-            @Valid @RequestBody LoginRequest loginRequest
-    ) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getUsername(),
-                            loginRequest.getPassword()
-                    )
-            );
-
-            String token = jwtTokenGenerator.generateToken(authentication);
-
-            LoginResponse loginResponse = new LoginResponse(
-                    token,
-                    "Bearer",
-                    expireInMinutes
-            );
-
-            return new ResponseEntity<>(loginResponse, HttpStatus.OK);
-        } catch (BadCredentialsException e) {
-            log.debug("Failed login attempt for user: {}", loginRequest.getUsername());
-            throw new AppException(401, "Unauthorized", "Invalid username or password");
-        } catch (AuthenticationException e) {
-            log.debug("Authentication exception: {}", e.getMessage());
-            throw new AppException(401, "Unauthorized", "Authentication Failed");
-        }
-    }
+    @Operation(
+        summary = "Login", description = "Generates JWT token", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Token generated",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = LoginResponse.class)
+                )
+            ),
+            @ApiResponse(responseCode = "401", description = "Unauthorized",
+                content = @Content(
+                        mediaType = "application/json",
+                        examples = @ExampleObject("""
+                                {
+                                    "timestamp": "timestamp",
+                                    "status": 401,
+                                    "error": "Unauthorized",
+                                    "message": "Invalid username or password",
+                                    "path": "/api/asupg-service/v1/auth/login"
+                                }
+                                """)
+                )
+            )
+    })
+    ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest);
 
 }

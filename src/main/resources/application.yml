@@ -25,3 +25,9 @@ security:
     secret: ${security.jwt.secret}
   public-endpoints:
     - /v1/auth/**
+    - /v3/api-docs/**
+    - /swagger-ui
+    - /swagger-ui/**
+    - /swagger-ui.html
+    - /api/asupg-service/swagger-ui/**
+    - /api/asupg-service/v3/api-docs/**

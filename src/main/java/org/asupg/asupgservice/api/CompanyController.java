@@ -1,5 +1,13 @@
 package org.asupg.asupgservice.api;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.asupg.asupgservice.model.CompanyDTO;
 import org.asupg.asupgservice.model.request.CompanyDebtSearchRequest;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
@@ -7,99 +15,265 @@ import org.asupg.asupgservice.model.request.CreateCompanyRequest;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
 import org.asupg.asupgservice.model.response.CompanySearchResponse;
-import org.asupg.asupgservice.service.CompanyService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/v1/companies")
-public class CompanyController {
+@Tag(name = "Company endpoints")
+public interface CompanyController {
 
-    private final CompanyService companyService;
+    @Operation(
+            summary = "Create company", description = "Creates a new company", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CompanyDTO.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 400,
+                                        "error": "Validation Failed",
+                                        "message": "Invalid input data. Please check the fields.",
+                                        "path": "/api/asupg-service/v1/companies",
+                                        "validationErrors": [
+                                            {
+                                                "field": "field name",
+                                                "message": "error description"
+                                            }
+                                        ]
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 403,
+                                        "error": "Forbidden",
+                                        "message": "Access Denied",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 409,
+                                        "error": "Validation failed",
+                                        "message": "Company with id: {id} already exists",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<CompanyDTO> createCompany(CreateCompanyRequest createCompanyRequest);
 
-    public CompanyController(CompanyService companyService) {
-        this.companyService = companyService;
-    }
+    @Operation(
+            summary = "Get companies", description = "Retrieves a list of companies with filtering and pagination", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CompanySearchResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 400,
+                                        "error": "Validation failed",
+                                        "message": "Invalid continuation token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+    })
+    ResponseEntity<CompanySearchResponse> getCompanies(CompanySearchRequest companyDebtSearchRequest);
 
-    @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN')")
-    public ResponseEntity<CompanyDTO> createCompany(
-            @Validated @RequestBody CreateCompanyRequest createCompanyRequest
-    ) {
-        CompanyDTO companyDTO = companyService.createCompany(
-                createCompanyRequest.getInn(),
-                createCompanyRequest.getName(),
-                createCompanyRequest.getMonthlyRate(),
-                createCompanyRequest.getBillingStartMonth(),
-                createCompanyRequest.getEmail(),
-                createCompanyRequest.getPhone()
-        );
+    @Operation(
+            summary = "Get company", description = "Retrieves a company by its INN", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CompanyDTO.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 404,
+                                        "error": "Validation failed",
+                                        "message": "Company with id: 123456789 not found",
+                                        "path": "/api/asupg-service/v1/companies/123456789"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<CompanyDTO> getCompany(String id);
 
-        return new ResponseEntity<>(companyDTO, HttpStatus.CREATED);
-    }
+    @Operation(
+            summary = "Get balance of a company", description = "Retrieves current balance of the company with a monthly breakdown", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CompanyBalanceResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 404,
+                                        "error": "Validation failed",
+                                        "message": "Company with id: 123456789 not found",
+                                        "path": "/api/asupg-service/v1/companies/123456789"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<CompanyBalanceResponse> getCompanyBalance(String id);
 
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<CompanySearchResponse> getCompanies(
-            @RequestBody @Validated CompanySearchRequest companyDebtSearchRequest
-    ) {
-        CompanySearchResponse response = companyService.getCompanies(
-                companyDebtSearchRequest.getMinBalance(),
-                companyDebtSearchRequest.getMaxBalance(),
-                companyDebtSearchRequest.getSubscriptionStartDateFrom(),
-                companyDebtSearchRequest.getSubscriptionStartDateTo(),
-                companyDebtSearchRequest.getBillingStartMonthFrom(),
-                companyDebtSearchRequest.getBillingStartMonthTo(),
-                companyDebtSearchRequest.getStatus(),
-                companyDebtSearchRequest.getLimit(),
-                companyDebtSearchRequest.getContinuationToken(),
-                companyDebtSearchRequest.getSortBy(),
-                companyDebtSearchRequest.getSortOrder()
-        );
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<CompanyDTO> getCompany(@PathVariable String id) {
-        CompanyDTO company = companyService.getCompany(id);
-
-        return new ResponseEntity<>(company, HttpStatus.OK);
-    }
-
-    @GetMapping("/{id}/balance")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<CompanyBalanceResponse> getCompanyBalance(@PathVariable String id) {
-        CompanyBalanceResponse companyBalance = companyService.getCompanyBalance(id);
-
-        return new ResponseEntity<>(companyBalance, HttpStatus.OK);
-    }
-
-    @GetMapping("/debtors")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<CompanyDebtResponse> getCompanyDebtors(
-            @RequestBody @Validated CompanyDebtSearchRequest companyDebtSearchRequest
-    ) {
-
-        var minDebt = companyDebtSearchRequest.getMinDebt();
-        var maxDebt = companyDebtSearchRequest.getMaxDebt();
-
-        minDebt = minDebt == null ? minDebt : minDebt.abs().negate();
-        maxDebt = maxDebt == null ? maxDebt : maxDebt.abs().negate();
-
-        CompanyDebtResponse companiesInDebt = companyService.getCompaniesInDebt(
-                minDebt,
-                maxDebt,
-                companyDebtSearchRequest.getLimit() == null ? 50 : companyDebtSearchRequest.getLimit(),
-                companyDebtSearchRequest.getContinuationToken(),
-                companyDebtSearchRequest.getSortOrder()
-        );
-
-        return new ResponseEntity<>(companiesInDebt, HttpStatus.OK);
-    }
+    @Operation(
+            summary = "Get companies in debt", description = "Retrieves a list of companies in debt with pagination and filtering", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = CompanyDebtResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 400,
+                                        "error": "Validation failed",
+                                        "message": "Invalid continuation token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<CompanyDebtResponse> getCompanyDebtors(CompanyDebtSearchRequest companyDebtSearchRequest);
 
 }
