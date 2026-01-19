@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -16,6 +17,10 @@ import java.util.List;
 public class JwtService {
 
     private final SecretKey signingKey;
+
+    // Expiry time in minutes
+    @Value("${security.jwt.expireInMinutes:15}")
+    private Long tokenExpireIn;
 
     public JwtService(@Value("${security.jwt.secret}") String secret) {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -32,6 +37,21 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         return !isTokenExpired(token);
+    }
+
+    public String generateToken(Authentication authentication) {
+        var authorities = authentication.getAuthorities()
+                .stream()
+                .map(a -> a.getAuthority().replace("ROLE_", ""))
+                .toList();
+
+        return Jwts.builder()
+                .subject(authentication.getName())
+                .claim("roles", authorities)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + tokenExpireIn * 60 * 1000))
+                .signWith(signingKey)
+                .compact();
     }
 
     private boolean isTokenExpired(String token) {

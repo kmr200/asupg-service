@@ -24,7 +24,7 @@ security:
     expireInMinutes: 15
     secret: ${security.jwt.secret}
   public-endpoints:
-    - /v1/auth/**
+    - /v1/auth/login
     - /v3/api-docs/**
     - /swagger-ui
     - /swagger-ui/**

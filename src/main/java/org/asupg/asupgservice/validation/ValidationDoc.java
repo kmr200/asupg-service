@@ -4,7 +4,12 @@ public class ValidationDoc {
 
     public static final String INN_BLANK_MESSAGE = "inn field cannot be empty";
     public static final String INN_SIZE_MESSAGE = "INN must be 9 characters long";
+    public static final String USERNAME_BLANK_MESSAGE = "username cannot be empty";
     public static final String NAME_BLANK_MESSAGE = "name field cannot be empty/blank";
+    public static final String FIRSTNAME_BLANK_MESSAGE = "firstName field cannot be empty/blank";
+    public static final String LASTNAME_BLANK_MESSAGE = "lastName field cannot be empty/blank";
+    public static final String PASSWORD_BLANK_MESSAGE = "password field cannot be empty/blank";
+    public static final String ROLES_EMPTY_MESSAGE = "roles field cannot be empty. Must contain at least one role";
     public static final String EMAIL_VALID_MESSAGE = "Email must be valid";
     public static final String BILLING_START_DATE_FUTURE = "Billing start date must be in the future";
 }
