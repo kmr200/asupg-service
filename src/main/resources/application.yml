@@ -3,11 +3,11 @@ spring:
     name: asupg-service
   data:
     mongodb:
-      host: localhost
-      port: 27017
-      database: asupg
-      username: asupg_user
-      password: asupg_pass
+      host: ${mongodb.host}
+      port: ${mongodb.port}
+      database: ${mongodb.database}
+      username: ${mongodb.username}
+      password: ${mongodb.password}
 
 server:
   servlet:
