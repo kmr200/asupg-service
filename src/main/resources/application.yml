@@ -9,6 +9,21 @@ spring:
       username: ${mongodb.username}
       password: ${mongodb.password}
 
+management:
+  server:
+    port: 8080
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    mongo:
+      enabled: true
+
+
 server:
   servlet:
     context-path: /api/asupg-service
@@ -31,3 +46,10 @@ security:
     - /swagger-ui.html
     - /api/asupg-service/swagger-ui/**
     - /api/asupg-service/v3/api-docs/**
+    - /actuator/health
+
+info:
+  app:
+    name: asupg-service
+    version: 1.0.0
+    description: ASUPG backend service
