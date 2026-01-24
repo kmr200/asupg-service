@@ -56,7 +56,7 @@ public class CompanyControllerImpl implements CompanyController {
                 companyDebtSearchRequest.getBillingStartMonthTo(),
                 companyDebtSearchRequest.getStatus(),
                 companyDebtSearchRequest.getLimit(),
-                companyDebtSearchRequest.getContinuationToken(),
+                companyDebtSearchRequest.getCursor(),
                 companyDebtSearchRequest.getSortBy(),
                 companyDebtSearchRequest.getSortOrder()
         );

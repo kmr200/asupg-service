@@ -1,35 +1,40 @@
 package org.asupg.asupgservice.model;
 
-import com.azure.spring.data.cosmos.core.mapping.Container;
-import com.azure.spring.data.cosmos.core.mapping.PartitionKey;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
-@Container(containerName = "Transactions", autoCreateContainer = false)
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
+@Document(collection = "transactions")
+@CompoundIndexes({
+        @CompoundIndex(
+                name = "inn_type_idx",
+                def = "{ 'counterpartyInn': 1, 'transactionType': 1 }"
+        )
+})
 public class TransactionDTO {
 
     @Id
-    @JsonIgnore
-    private String id;
+    private String transactionId;
 
-    @PartitionKey
     private String counterpartyInn;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate date;
-
-    private String transactionId;
 
     private String counterpartyName;
 
@@ -37,6 +42,7 @@ public class TransactionDTO {
 
     private String mfo;
 
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal amount;
 
     private String description;
@@ -45,26 +51,14 @@ public class TransactionDTO {
 
     private ReconciliationDTO reconciliation;
 
-    @JsonProperty("_etag")
+    @Version
     @JsonIgnore
-    private String etag;
+    private Long version;
 
     @NoArgsConstructor
-    @AllArgsConstructor
     public enum TransactionType {
-        BANK_PAYMENT("BANK_PAYMENT"),      // Payment from customer (external)
-        MONTHLY_CHARGE("MONTHLY_CHARGE");
-        private String value;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-        this.transactionId = id;
-    }
-
-    public void setTransactionId(String transactionId) {
-        this.id = id;
-        this.transactionId = id;
+        BANK_PAYMENT,      // Payment from customer (external)
+        MONTHLY_CHARGE
     }
 
     @Override

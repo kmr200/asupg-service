@@ -1,98 +1,72 @@
 package org.asupg.asupgservice.repository;
 
-import com.azure.cosmos.CosmosClient;
-import com.azure.cosmos.CosmosClientBuilder;
-import com.azure.cosmos.CosmosContainer;
-import com.azure.cosmos.models.CosmosQueryRequestOptions;
-import com.azure.cosmos.models.FeedResponse;
-import com.azure.cosmos.models.SqlParameter;
-import com.azure.cosmos.models.SqlQuerySpec;
-import com.azure.cosmos.util.CosmosPagedIterable;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.asupg.asupgservice.model.CompanyDTO;
-import org.asupg.asupgservice.model.CompanyStatus;
-import org.asupg.asupgservice.model.CosmosPageResponse;
-import org.asupg.asupgservice.model.SortOrder;
+import org.asupg.asupgservice.model.*;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Repository
 public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
 
-    private final CosmosClient cosmosClient;
-    private final CosmosContainer container;
+    private final MongoTemplate mongoTemplate;
+    private final ObjectMapper objectMapper;
 
-    public CompanyRepositoryImpl(
-            CosmosClientBuilder clientBuilder,
-            @Value("${azure.cosmos.database}") String databaseName,
-            @Value("${azure.cosmos.container-companies}") String containerName
-    ) {
-        this.cosmosClient = clientBuilder
-                .buildClient();
-        this.container = cosmosClient
-                .getDatabase(databaseName)
-                .getContainer(containerName);
+    public CompanyRepositoryImpl(MongoTemplate mongoTemplate, ObjectMapper objectMapper) {
+        this.mongoTemplate = mongoTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
-    public CosmosPageResponse<CompanyDTO> findCompaniesInDebt(
+    public MongoPageResponse<CompanyDTO> findCompaniesInDebt(
             BigDecimal minBalance,
             BigDecimal maxBalance,
             int limit,
-            String continuationToken,
+            String cursor,
             SortOrder sortOrder
     ) {
-        StringBuilder query = new StringBuilder(
-                "SELECT * FROM c WHERE c.currentBalance < 0"
-        );
-        List<SqlParameter> parameters = new ArrayList<>();
+
+        Query query = new Query();
+
+        query.addCriteria(Criteria.where("currentBalance").lt(BigDecimal.ZERO));
 
         if (minBalance != null) {
-            query.append(" AND c.currentBalance >= @minBalance ");
-            parameters.add(new SqlParameter("@minBalance", minBalance));
+            query.addCriteria(Criteria.where("currentBalance").gte(minBalance));
         }
         if (maxBalance != null) {
-            query.append(" AND c.currentBalance <= @maxBalance ");
-            parameters.add(new SqlParameter("@maxBalance", maxBalance));
+            query.addCriteria(Criteria.where("currentBalance").lt(maxBalance));
         }
 
-        query.append(" ORDER BY c.currentBalance ");
+        Sort.Direction direction =
+                sortOrder == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        query.append(Objects.requireNonNullElse(sortOrder, SortOrder.DESC));
+        CompanySearchRequest.SortBy sortBy = CompanySearchRequest.SortBy.CURRENT_BALANCE;
 
-        SqlQuerySpec querySpec = new SqlQuerySpec(query.toString(), parameters);
+        query.with(Sort.by(direction, sortBy.getValue(), "_id"));
+        query.limit(limit + 1);
 
-        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
+        applyCursor(query, cursor, sortBy, direction);
 
-        CosmosPagedIterable<CompanyDTO> pagedIterable = container.queryItems(
-                querySpec,
-                options,
-                CompanyDTO.class
-        );
+        List<CompanyDTO> results = mongoTemplate.find(query, CompanyDTO.class);
 
-        List<CompanyDTO> results = new ArrayList<>();
-        String newContinuationToken = null;
-
-        for (FeedResponse<CompanyDTO> page : pagedIterable.iterableByPage(continuationToken, limit)) {
-            results.addAll(page.getResults());
-            newContinuationToken = page.getContinuationToken();
-            break; // Only get first page
-        }
-
-        return new CosmosPageResponse<>(results,  newContinuationToken);
+        return buildPage(results, limit, sortBy);
     }
 
     @Override
-    public CosmosPageResponse<CompanyDTO> findCompanies(
+    public MongoPageResponse<CompanyDTO> findCompanies(
             BigDecimal minBalance,
             BigDecimal maxBalance,
             LocalDate subscriptionStartDateFrom,
@@ -101,74 +75,137 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
             YearMonth billingStartMonthTo,
             CompanyStatus status,
             Integer limit,
-            String continuationToken,
+            String cursor,
             CompanySearchRequest.SortBy sortBy,
             SortOrder sortOrder
     ) {
 
-        StringBuilder query = new StringBuilder(
-                "SELECT * FROM c WHERE 1=1"
-        );
-        List<SqlParameter> parameters = new ArrayList<>();
+        Query query = new Query();
 
-        if (minBalance != null) {
-            query.append(" AND c.currentBalance >= @minBalance");
-            parameters.add(new SqlParameter("@minBalance", minBalance));
-        }
-        if (maxBalance != null) {
-            query.append(" AND c.currentBalance <= @maxBalance ");
-            parameters.add(new SqlParameter("@maxBalance", maxBalance));
-        }
-        if (subscriptionStartDateFrom != null) {
-            query.append(" AND c.subscriptionStartDate >= @subscriptionStartDateFrom");
-            parameters.add(new SqlParameter("@subscriptionStartDateFrom", subscriptionStartDateFrom.toString()));
-        }
-        if (subscriptionStartDateTo != null) {
-            query.append(" AND c.subscriptionStartDate <= @subscriptionStartDateTo");
-            parameters.add(new SqlParameter("@subscriptionStartDateTo", subscriptionStartDateTo.toString()));
-        }
-        if (billingStartMonthFrom != null) {
-            query.append(" AND c.billingStartMonth >= @billingStartMonthFrom");
-            parameters.add(new SqlParameter("@billingStartMonthFrom", billingStartMonthFrom.toString()));
-        }
-        if (billingStartMonthTo != null) {
-            query.append(" AND c.billingStartMonth <= @billingStartMonthTo");
-            parameters.add(new SqlParameter("@billingStartMonthTo", billingStartMonthTo.toString()));
-        }
-        if (status != null) {
-            query.append(" AND c.status = @status");
-            parameters.add(new SqlParameter("@status", status));
-        }
+        if (minBalance != null)
+            query.addCriteria(Criteria.where("currentBalance").gte(minBalance));
+        if (maxBalance != null)
+            query.addCriteria(Criteria.where("currentBalance").lte(maxBalance));
+        if (subscriptionStartDateFrom != null)
+            query.addCriteria(Criteria.where("subscriptionStartDate").gte(subscriptionStartDateFrom));
+        if (subscriptionStartDateTo != null)
+            query.addCriteria(Criteria.where("subscriptionStartDate").lte(subscriptionStartDateTo));
+        if (billingStartMonthFrom != null)
+            query.addCriteria(Criteria.where("billingStartMonth").gte(billingStartMonthFrom.toString()));
+        if (billingStartMonthTo != null)
+            query.addCriteria(Criteria.where("billingStartMonth").lte(billingStartMonthTo.toString()));
+        if (status != null)
+            query.addCriteria(Criteria.where("status").is(status));
 
         CompanySearchRequest.SortBy effectiveSortBy =
-                Objects.requireNonNullElse(sortBy, CompanySearchRequest.SortBy.NAME);
+                sortBy != null ? sortBy : CompanySearchRequest.SortBy.NAME;
 
-        SortOrder effectiveSortOrder =
-                Objects.requireNonNullElse(sortOrder, SortOrder.DESC);
+        Sort.Direction direction =
+                sortOrder == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        query.append(" ORDER BY c.").append(effectiveSortBy.getValue()).append(" ").append(effectiveSortOrder.getValue());
-
-        SqlQuerySpec querySpec = new SqlQuerySpec(query.toString(), parameters);
-
-        CosmosQueryRequestOptions options = new CosmosQueryRequestOptions();
-
-        CosmosPagedIterable<CompanyDTO> pagedIterable = container.queryItems(
-                querySpec,
-                options,
-                CompanyDTO.class
+        query.addCriteria(
+                Criteria.where(effectiveSortBy.getValue()).ne(null)
         );
 
-        List<CompanyDTO> results = new ArrayList<>();
-        String newContinuationToken = null;
+        query.with(Sort.by(direction, effectiveSortBy.getValue(), "_id"));
+        query.limit(limit + 1);
 
-        for (FeedResponse<CompanyDTO> page : pagedIterable.iterableByPage(continuationToken, limit)) {
-            results.addAll(page.getResults());
-            newContinuationToken = page.getContinuationToken();
-            break; // Only get first page
+        applyCursor(query, cursor, effectiveSortBy, direction);
+
+        List<CompanyDTO> results = mongoTemplate.find(query, CompanyDTO.class);
+
+        return buildPage(results, limit, effectiveSortBy);
+
+    }
+
+    private void applyCursor(
+            Query query,
+            String cursor,
+            CompanySearchRequest.SortBy sortBy,
+            Sort.Direction direction
+    ) {
+        if (cursor == null || cursor.isBlank()) return;
+
+        CursorPayload payload = decodeCursor(cursor);
+
+        CompanySearchRequest.SortBy cursorSortBy =
+                CompanySearchRequest.SortBy.valueOf(payload.sortBy());
+
+        if (cursorSortBy != sortBy) {
+            throw new IllegalArgumentException("Cursor sort field mismatch");
         }
 
-        return new CosmosPageResponse<>(results, newContinuationToken);
+        Object sortValue = cursorSortBy.getParser().apply(payload.sortValue());
+        String id = payload.id();
 
+        Criteria cursorCriteria = new Criteria().orOperator(
+                direction == Sort.Direction.ASC
+                        ? Criteria.where(sortBy.getValue()).gt(sortValue)
+                        : Criteria.where(sortBy.getValue()).lt(sortValue),
+
+                new Criteria().andOperator(
+                        Criteria.where(sortBy.getValue()).is(sortValue),
+                        direction == Sort.Direction.ASC
+                                ? Criteria.where("_id").gt(id)
+                                : Criteria.where("_id").lt(id)
+                )
+        );
+
+        query.addCriteria(cursorCriteria);
+    }
+
+    private MongoPageResponse<CompanyDTO> buildPage(
+            List<CompanyDTO> results,
+            int limit,
+            CompanySearchRequest.SortBy sortBy
+    ) {
+        boolean hasNext = results.size() > limit;
+
+        if (hasNext) {
+            results.remove(limit);
+        }
+
+        String nextCursor = null;
+        if (hasNext) {
+            CompanyDTO last = results.getLast();
+            Object sortValue = sortBy.getExtractor().apply(last);
+
+            nextCursor = encodeCursor(
+                    sortBy,
+                    sortValue,
+                    last.getInn()
+            );
+        }
+
+        return new MongoPageResponse<>(results, nextCursor);
+    }
+
+    private String encodeCursor(
+            CompanySearchRequest.SortBy sortBy,
+            Object sortValue,
+            String id
+    ) {
+        CursorPayload payload = new CursorPayload(
+                sortBy.name(),
+                sortValue.toString(),
+                id
+        );
+
+        try {
+            String json = objectMapper.writeValueAsString(payload);
+            return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to encode cursor", e);
+        }
+    }
+
+    private CursorPayload decodeCursor(String cursor) {
+        try {
+            byte[] decoded = Base64.getUrlDecoder().decode(cursor);
+            return objectMapper.readValue(decoded, CursorPayload.class);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid cursor", e);
+        }
     }
 
 }

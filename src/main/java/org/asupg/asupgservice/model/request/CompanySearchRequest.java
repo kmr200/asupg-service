@@ -10,12 +10,15 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.asupg.asupgservice.model.CompanyDTO;
 import org.asupg.asupgservice.model.CompanyStatus;
 import org.asupg.asupgservice.model.SortOrder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Arrays;
+import java.util.function.Function;
 
 @Getter
 @Setter
@@ -51,7 +54,7 @@ public class CompanySearchRequest {
     Integer limit = 10;
 
     @Schema(description = "Continuation token to retrieve next page", example = "token", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    String continuationToken;
+    String cursor;
 
     @JsonProperty(defaultValue = "name")
     @Schema(description = "Specifies the field by which the result will be sorted", example = "inn", defaultValue = "name", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
@@ -62,32 +65,57 @@ public class CompanySearchRequest {
     SortOrder sortOrder = SortOrder.DESC;
 
     @AllArgsConstructor
-    @NoArgsConstructor
     @Getter
     public enum SortBy {
-        MONTHLY_RATE("monthlyRate"),
-        SUBSCRIPTION_START_DATE("subscriptionStartDate"),
-        BILLING_START_MONTH("billingStartMonth"),
-        CURRENT_BALANCE("currentBalance"),
-        INN("inn"),
-        NAME("name");
 
-        private String value;
+        MONTHLY_RATE(
+                "monthlyRate",
+                CompanyDTO::getMonthlyRate,
+                BigDecimal::new
+        ),
+        SUBSCRIPTION_START_DATE(
+                "subscriptionStartDate",
+                CompanyDTO::getSubscriptionStartDate,
+                LocalDate::parse
+        ),
+        BILLING_START_MONTH(
+                "billingStartMonth",
+                CompanyDTO::getBillingStartMonth,
+                YearMonth::parse
+        ),
+        CURRENT_BALANCE(
+                "currentBalance",
+                CompanyDTO::getCurrentBalance,
+                BigDecimal::new
+        ),
+        INN(
+                "inn",
+                CompanyDTO::getInn,
+                s -> s
+        ),
+        NAME(
+                "name",
+                CompanyDTO::getName,
+                s -> s
+        );
+
+        private final String mongoField;
+        private final Function<CompanyDTO, Object> extractor;
+        private final Function<String, Object> parser;
 
         @JsonCreator
         public static SortBy fromValue(String value) {
-            for (SortBy s : SortBy.values()) {
-                if (s.value.equals(value)) {
-                    return s;
-                }
-            }
-            throw new IllegalArgumentException(value);
+            return Arrays.stream(values())
+                    .filter(s -> s.mongoField.equals(value))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Unsupported sort field: " + value));
         }
 
         @JsonValue
         public String getValue() {
-            return value;
+            return mongoField;
         }
     }
+
 
 }

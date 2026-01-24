@@ -1,7 +1,5 @@
 package org.asupg.asupgservice.model;
 
-import com.azure.spring.data.cosmos.core.mapping.Container;
-import com.azure.spring.data.cosmos.core.mapping.PartitionKey;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,6 +9,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -21,22 +25,25 @@ import java.util.Objects;
 @NoArgsConstructor
 @Getter
 @Setter
-@ToString
-@Container(containerName = "Companies", autoCreateContainer = false)
+@Document(collection = "companies")
+@CompoundIndexes({
+        @CompoundIndex(name = "balance_idx", def = "{'currentBalance': 1, '_id': 1}"),
+        @CompoundIndex(name = "status_idx", def = "{'status': 1}"),
+        @CompoundIndex(name = "subscriptionStartDate_idx", def = "{'subscriptionStartDate': 1}"),
+        @CompoundIndex(name = "billingStartMonth_idx", def = "{'billingStartMonth': 1}"),
+        @CompoundIndex(name = "name_idx", def = "{'name': 1}"),
+        @CompoundIndex(def = "{'status': 1, 'currentBalance': 1, '_id': 1}")
+})
 public class CompanyDTO {
 
     @Id
-    @JsonProperty("id")
-    @JsonIgnore
-    private String id;
-
-    @PartitionKey
     @Schema(description = "INN of the company to be created", example = "123456789")
     private String inn;
 
     @Schema(description = "Name of the company to be created", example = "OOO \"TEST\"")
     private String name;
 
+    @Field(targetType = FieldType.DECIMAL128)
     @Schema(description = "Monthly subscription cost for the company", example = "100000")
     private BigDecimal monthlyRate;
 
@@ -44,14 +51,17 @@ public class CompanyDTO {
     @Schema(description = "When the company was registered", example = "2024-01-17")
     private LocalDate subscriptionStartDate;
 
+    @Field(targetType = FieldType.STRING)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
     @Schema(description = "When does company start paying for the subscription. After 1 year from creation date if not specified", example = "2027-01")
     private YearMonth billingStartMonth;
 
+    @Field(targetType = FieldType.STRING)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
     @Schema(description = "Last time when the company was charged", example = "2026-01")
     private YearMonth lastBilledMonth;
 
+    @Field(targetType = FieldType.DECIMAL128)
     @Schema(description = "Current balance of the company", example = "200000")
     private BigDecimal currentBalance;
 
@@ -68,9 +78,9 @@ public class CompanyDTO {
     @Schema(description = "Phone contact point of the company")
     private String phone;
 
-    @JsonProperty("_etag")
+    @Version
     @JsonIgnore
-    private String etag;
+    private Long version;
 
     public CompanyDTO(
             String inn,
@@ -82,7 +92,6 @@ public class CompanyDTO {
             String email,
             String phone
     ) {
-        this.id = inn;
         this.inn = inn;
         this.name = name;
         this.monthlyRate = monthlyRate;
@@ -91,16 +100,6 @@ public class CompanyDTO {
         this.status = status;
         this.email = email;
         this.phone = phone;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-        this.inn = id;
-    }
-
-    public void setInn(String inn) {
-        this.id = inn;
-        this.inn = inn;
     }
 
     @Override

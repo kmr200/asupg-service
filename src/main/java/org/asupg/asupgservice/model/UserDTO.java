@@ -1,28 +1,34 @@
 package org.asupg.asupgservice.model;
 
-import com.azure.spring.data.cosmos.core.mapping.Container;
-import com.azure.spring.data.cosmos.core.mapping.PartitionKey;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
 
-@Container(containerName = "Users", autoCreateContainer = false)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Schema(description = "DTO class describing user entity")
+@Document(collection = "users")
+@CompoundIndexes({
+        @CompoundIndex(name = "username_idx", def = "{'username': 1}"),
+        @CompoundIndex(name = "enabled_idx", def = "{'enabled': 1}"),
+        @CompoundIndex(name = "locked_idx", def = "{'locked': 1}")
+})
 public class UserDTO {
 
     @Id
-    @PartitionKey
     @Schema(description = "Username of the user", examples = "user")
     private String username;
 
@@ -32,6 +38,7 @@ public class UserDTO {
     @Schema(description = "Last name of the user", examples = "Doe")
     private String lastName;
 
+    @JsonIgnore
     @Schema(description = "Hashed password of the user. Not returned as a response")
     private String passwordHash;
 
@@ -49,6 +56,10 @@ public class UserDTO {
 
     @Schema(description = "When the users account was created")
     private LocalDateTime createdAt;
+
+    @Version
+    @JsonIgnore
+    private Long version;
 
     public UserDTO(String username, String firstName, String lastName, String passwordHash, Set<String> roles) {
         this.username = username;

@@ -1,18 +1,18 @@
 spring:
   application:
     name: asupg-service
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: asupg
+      username: asupg_user
+      password: asupg_pass
 
 server:
   servlet:
     context-path: /api/asupg-service
   port: 8080
-
-azure:
-  cosmos:
-    database: ${azure.cosmos.database}
-    endpoint: ${azure.cosmos.endpoint}
-    key: ${azure.cosmos.key}
-    container-companies: Companies
 
 asupg:
   billing:
@@ -21,7 +21,7 @@ asupg:
 
 security:
   jwt:
-    expireInMinutes: 15
+    expireInMinutes: 60
     secret: ${security.jwt.secret}
   public-endpoints:
     - /v1/auth/login

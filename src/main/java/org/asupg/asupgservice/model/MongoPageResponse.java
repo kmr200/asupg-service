@@ -11,9 +11,9 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CosmosPageResponse<T> {
+public class MongoPageResponse<T> {
 
     private List<T> items;
-    private String continuationToken;
+    private String nextCursor;
 
 }

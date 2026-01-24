@@ -26,13 +26,13 @@ public class CompanySearchResponse {
     boolean hasMore;
 
     @Schema(description = "Continuation token to retrieve next page", example = "token")
-    String continuationToken;
+    String nextCursor;
 
-    public CompanySearchResponse(List<CompanyDTO> companies, String continuationToken) {
+    public CompanySearchResponse(List<CompanyDTO> companies, String nextCursor) {
         this.companies = companies;
-        this.continuationToken = continuationToken;
+        this.nextCursor = nextCursor;
         this.count = companies != null ? companies.size() : 0;
-        this.hasMore = continuationToken != null && !continuationToken.isEmpty();
+        this.hasMore = nextCursor != null && !nextCursor.isEmpty();
     }
 
 }

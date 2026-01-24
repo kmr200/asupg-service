@@ -1,8 +1,5 @@
 package org.asupg.asupgservice.service;
 
-import com.azure.cosmos.CosmosException;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.*;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
@@ -152,7 +149,8 @@ public class CompanyService {
             String continuationToken,
             SortOrder sortOrder
     ) {
-        CosmosPageResponse<CompanyDTO> page;
+        MongoPageResponse<CompanyDTO> page;
+
         try {
             page = companyRepository.findCompaniesInDebt(
                     minBalance,
@@ -161,14 +159,15 @@ public class CompanyService {
                     continuationToken,
                     sortOrder
             );
-        } catch (CosmosException e) {
-            if (e.getMessage().contains("INVALID JSON in continuation token")) {
-                throw new AppException(400, "Validation failed", "Invalid continuation token");
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("Cursor sort field mismatch")) {
+                throw new AppException(400, "Validation failed", "Invalid cursor");
             } else {
-                logger.warn(e.getMessage());
+                logger.error(e.getMessage());
                 throw e;
             }
         }
+
         List<CompanyDebtResponse.CompanyDebtDetails> data = page.getItems().stream()
                 .map(
                         company -> new CompanyDebtResponse.CompanyDebtDetails(
@@ -180,7 +179,7 @@ public class CompanyService {
 
         return new CompanyDebtResponse(
                 data,
-                page.getContinuationToken()
+                page.getNextCursor()
         );
     }
 
@@ -193,12 +192,12 @@ public class CompanyService {
             YearMonth billingStartMonthTo,
             CompanyStatus status,
             Integer limit,
-            String continuationToken,
+            String cursor,
             CompanySearchRequest.SortBy sortBy,
             SortOrder sortOrder
     ) {
 
-        CosmosPageResponse<CompanyDTO> page;
+        MongoPageResponse<CompanyDTO> page;
 
         try {
             page = companyRepository.findCompanies(
@@ -210,19 +209,19 @@ public class CompanyService {
                     billingStartMonthTo,
                     status,
                     limit,
-                    continuationToken,
+                    cursor,
                     sortBy,
                     sortOrder
             );
-        } catch (CosmosException e) {
-            if (e.getMessage().contains("INVALID JSON in continuation token")) {
-                throw new AppException(400, "Validation failed", "Invalid continuation token");
+        } catch (IllegalArgumentException e) {
+            if (e.getMessage().contains("Cursor sort field mismatch")) {
+                throw new AppException(400, "Validation failed", "Invalid cursor");
             } else {
-                logger.warn(e.getMessage());
+                logger.error(e.getMessage());
                 throw e;
             }
         }
 
-        return new CompanySearchResponse(page.getItems(), page.getContinuationToken());
+        return new CompanySearchResponse(page.getItems(), page.getNextCursor());
     }
 }

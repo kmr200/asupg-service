@@ -1,7 +1,8 @@
 package org.asupg.asupgservice.repository;
 
-import com.azure.spring.data.cosmos.repository.CosmosRepository;
 import org.asupg.asupgservice.model.UserDTO;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserRepository extends CosmosRepository<UserDTO, String> {
+public interface UserRepository extends MongoRepository<UserDTO, String> {
+
 }
