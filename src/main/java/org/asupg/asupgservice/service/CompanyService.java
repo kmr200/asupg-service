@@ -7,18 +7,19 @@ import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
 import org.asupg.asupgservice.model.response.CompanySearchResponse;
 import org.asupg.asupgservice.repository.CompanyRepository;
+import org.asupg.asupgservice.repository.DeviceRepository;
 import org.asupg.asupgservice.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,19 +27,16 @@ public class CompanyService {
 
     private static final Logger logger = LoggerFactory.getLogger(CompanyService.class);
 
-    @Value("${asupg.billing.free-period}")
-    private Integer billingFreePeriod;
-
-    @Value("${asupg.billing.monthly-rate}")
-    private Long billingMonthlyRate;
-
     private final CompanyRepository companyRepository;
 
     private final TransactionRepository transactionRepository;
 
-    public CompanyService(CompanyRepository companyRepository, TransactionRepository transactionRepository) {
+    private final DeviceRepository deviceRepository;
+
+    public CompanyService(CompanyRepository companyRepository, TransactionRepository transactionRepository, DeviceRepository deviceRepository) {
         this.companyRepository = companyRepository;
         this.transactionRepository = transactionRepository;
+        this.deviceRepository = deviceRepository;
     }
 
     public CompanyDTO getCompany(String id) {
@@ -51,8 +49,6 @@ public class CompanyService {
     public CompanyDTO createCompany(
             String inn,
             String name,
-            Long monthlyRate,
-            YearMonth billingStartMonth,
             String email,
             String phone
     ) {
@@ -63,29 +59,20 @@ public class CompanyService {
             throw new AppException(409, "Validation failed", "Company with id: " + inn + " already exists");
         }
 
-        if (billingStartMonth == null) {
-            billingStartMonth = YearMonth.now(ZoneOffset.UTC).plusYears(billingFreePeriod);
-        }
-
-        if (monthlyRate == null) {
-            monthlyRate = billingMonthlyRate;
-        }
-
-        CompanyDTO company = companyRepository.save(
-                new CompanyDTO(
-                        inn,
-                        name,
-                        BigDecimal.valueOf(monthlyRate),
-                        LocalDate.now(),
-                        billingStartMonth,
-                        CompanyStatus.ACTIVE,
-                        email,
-                        phone
-                )
+        CompanyDTO companyDTO = new CompanyDTO(
+                inn,
+                name,
+                CompanyStatus.ACTIVE,
+                email,
+                phone
         );
-        logger.info("Successfully created company {}", name);
 
-        return company;
+        try {
+            return companyRepository.insert(companyDTO);
+        } catch (DuplicateKeyException e) {
+            logger.info("Company with id {} already exists", inn);
+            throw new AppException(409, "Conflict", "Company with id: " + inn + " already exists");
+        }
     }
 
     public CompanyBalanceResponse getCompanyBalance(String id) {
@@ -100,25 +87,35 @@ public class CompanyService {
                 TransactionDTO.TransactionType.MONTHLY_CHARGE
         );
 
-        Map<YearMonth, List<TransactionDTO>> groupedByMonth =
+        List<DeviceDTO> devices = deviceRepository.findByCompanyInn(id);
+        BigDecimal monthlyCharge = devices.stream()
+                .map(DeviceDTO::getMonthlyRate)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        Map<YearMonth, BigDecimal> totalsByMonth =
                 monthlyChargeTransactions.stream()
                         .collect(Collectors.groupingBy(
-                                transaction -> YearMonth.from(transaction.getDate())
+                                tx -> YearMonth.from(tx.getDate()),
+                                Collectors.reducing(
+                                        BigDecimal.ZERO,
+                                        TransactionDTO::getAmount,
+                                        BigDecimal::add
+                                )
                         ));
 
         YearMonth now = YearMonth.now(ZoneOffset.UTC);
 
         List<CompanyBalanceResponse.MonthlyCharge> monthlyBreakdown =
-                groupedByMonth.entrySet().stream()
+                totalsByMonth.entrySet().stream()
+                        .sorted(Map.Entry.comparingByKey())
                         .map(entry -> {
                             YearMonth month = entry.getKey();
-                            BigDecimal totalForMonth = entry.getValue().stream()
-                                    .map(TransactionDTO::getAmount)
-                                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                            BigDecimal total = entry.getValue();
 
                             return new CompanyBalanceResponse.MonthlyCharge(
                                     month.toString(),
-                                    totalForMonth,
+                                    total,
                                     month.atDay(1),
                                     month.atEndOfMonth(),
                                     month.equals(now) ? "CURRENT" : "PAST"
@@ -134,10 +131,8 @@ public class CompanyService {
                 company.getCurrentBalance(),
                 monthsElapsed,
                 monthlyBreakdown,
-                new CompanyBalanceResponse.BillingInfo(
-                        company.getBillingStartMonth(),
-                        company.getMonthlyRate()
-                )
+                monthlyCharge,
+                devices
         );
 
     }
@@ -186,10 +181,6 @@ public class CompanyService {
     public CompanySearchResponse getCompanies(
             BigDecimal minBalance,
             BigDecimal maxBalance,
-            LocalDate subscriptionStartDateFrom,
-            LocalDate subscriptionStartDateTo,
-            YearMonth billingStartMonthFrom,
-            YearMonth billingStartMonthTo,
             CompanyStatus status,
             Integer limit,
             String cursor,
@@ -203,10 +194,6 @@ public class CompanyService {
             page = companyRepository.findCompanies(
                     minBalance,
                     maxBalance,
-                    subscriptionStartDateFrom,
-                    subscriptionStartDateTo,
-                    billingStartMonthFrom,
-                    billingStartMonthTo,
                     status,
                     limit,
                     cursor,

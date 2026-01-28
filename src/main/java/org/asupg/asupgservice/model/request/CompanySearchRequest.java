@@ -15,8 +15,6 @@ import org.asupg.asupgservice.model.CompanyStatus;
 import org.asupg.asupgservice.model.SortOrder;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.Arrays;
 import java.util.function.Function;
 
@@ -31,18 +29,6 @@ public class CompanySearchRequest {
 
     @Schema(description = "Maximum balance of the company", example = "200000", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     BigDecimal maxBalance;
-
-    @Schema(description = "Filter companies by upper boundary for subscription start date", example = "2026-01-17", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    LocalDate subscriptionStartDateFrom;
-
-    @Schema(description = "Filter companies by lower boundary for subscription start date", example = "2025-01-17", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    LocalDate subscriptionStartDateTo;
-
-    @Schema(description = "Filter companies by upper boundary for billing start month", example = "2026-01", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    YearMonth billingStartMonthFrom;
-
-    @Schema(description = "Filter companies by lower boundary for subscription start date", example = "2025-01", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    YearMonth billingStartMonthTo;
 
     @Schema(description = "Filter companies by their status", example = "ACTIVE", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     CompanyStatus status;
@@ -68,21 +54,6 @@ public class CompanySearchRequest {
     @Getter
     public enum SortBy {
 
-        MONTHLY_RATE(
-                "monthlyRate",
-                CompanyDTO::getMonthlyRate,
-                BigDecimal::new
-        ),
-        SUBSCRIPTION_START_DATE(
-                "subscriptionStartDate",
-                CompanyDTO::getSubscriptionStartDate,
-                LocalDate::parse
-        ),
-        BILLING_START_MONTH(
-                "billingStartMonth",
-                CompanyDTO::getBillingStartMonth,
-                YearMonth::parse
-        ),
         CURRENT_BALANCE(
                 "currentBalance",
                 CompanyDTO::getCurrentBalance,

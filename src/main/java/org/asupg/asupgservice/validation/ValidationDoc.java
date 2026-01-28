@@ -12,4 +12,5 @@ public class ValidationDoc {
     public static final String ROLES_EMPTY_MESSAGE = "roles field cannot be empty. Must contain at least one role";
     public static final String EMAIL_VALID_MESSAGE = "Email must be valid";
     public static final String BILLING_START_DATE_FUTURE = "Billing start date must be in the future";
+    public static final String DEVICE_NAME_BLANK_MESSAGE = "deviceName field cannot be empty/blank";
 }

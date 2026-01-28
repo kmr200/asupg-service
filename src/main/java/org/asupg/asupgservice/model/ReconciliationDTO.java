@@ -27,19 +27,6 @@ public class ReconciliationDTO {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
     private LocalDateTime updatedAt;
 
-    public ReconciliationDTO(ReconciliationStatus status) {
-        this.status = status;
-        this.processedAt = LocalDateTime.now();
-        manual = false;
-    }
-
-    public ReconciliationDTO(ReconciliationStatus status, String failureReason) {
-        this.status = status;
-        this.failureReason = failureReason;
-        this.processedAt = LocalDateTime.now();
-        manual = false;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

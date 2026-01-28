@@ -7,8 +7,6 @@ import org.asupg.asupgservice.model.SortOrder;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
 
 public interface CompanyRepositoryCustom {
 
@@ -23,10 +21,6 @@ public interface CompanyRepositoryCustom {
     MongoPageResponse<CompanyDTO> findCompanies(
             BigDecimal minBalance,
             BigDecimal maxBalance,
-            LocalDate subscriptionStartDateFrom,
-            LocalDate subscriptionStartDateTo,
-            YearMonth billingStartMonthFrom,
-            YearMonth billingStartMonthTo,
             CompanyStatus status,
             Integer limit,
             String cursor,

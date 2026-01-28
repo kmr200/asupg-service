@@ -2,12 +2,10 @@ package org.asupg.asupgservice.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -17,9 +15,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
 import java.util.Objects;
 
 @NoArgsConstructor
@@ -42,24 +38,6 @@ public class CompanyDTO {
 
     @Schema(description = "Name of the company to be created", example = "OOO \"TEST\"")
     private String name;
-
-    @Field(targetType = FieldType.DECIMAL128)
-    @Schema(description = "Monthly subscription cost for the company", example = "100000")
-    private BigDecimal monthlyRate;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
-    @Schema(description = "When the company was registered", example = "2024-01-17")
-    private LocalDate subscriptionStartDate;
-
-    @Field(targetType = FieldType.STRING)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
-    @Schema(description = "When does company start paying for the subscription. After 1 year from creation date if not specified", example = "2027-01")
-    private YearMonth billingStartMonth;
-
-    @Field(targetType = FieldType.STRING)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM")
-    @Schema(description = "Last time when the company was charged", example = "2026-01")
-    private YearMonth lastBilledMonth;
 
     @Field(targetType = FieldType.DECIMAL128)
     @Schema(description = "Current balance of the company", example = "200000")
@@ -85,18 +63,12 @@ public class CompanyDTO {
     public CompanyDTO(
             String inn,
             String name,
-            BigDecimal monthlyRate,
-            LocalDate subscriptionStartDate,
-            YearMonth billingStartMonth,
             CompanyStatus status,
             String email,
             String phone
     ) {
         this.inn = inn;
         this.name = name;
-        this.monthlyRate = monthlyRate;
-        this.subscriptionStartDate = subscriptionStartDate;
-        this.billingStartMonth = billingStartMonth;
         this.status = status;
         this.email = email;
         this.phone = phone;

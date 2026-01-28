@@ -48,7 +48,7 @@ public interface AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "User created successfully",
                     content = @Content(
-                        schema = @Schema(implementation = UserDTO.class)
+                            schema = @Schema(implementation = UserDTO.class)
                     )
             ),
             @ApiResponse(responseCode = "403", description = "Unauthorized to create new user",

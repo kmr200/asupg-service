@@ -4,10 +4,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.asupg.asupgservice.model.DeviceDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
 
 @Data
@@ -31,11 +31,14 @@ public class CompanyBalanceResponse {
     @Schema(description = "Monthly breakdown of each monthly payment company made")
     private List<MonthlyCharge> monthlyBreakdown;
 
-    @Schema(description = "General billing information")
-    private BillingInfo billingInfo;
+    @Schema(description = "Monthly rate company is expected to pay")
+    private BigDecimal monthlyRate;
 
     @Schema(description = "Current status of companies balance. DEBT if in debt and CREDIT if positive.", example = "CREDIT")
     private BalanceStatus balanceStatus;
+
+    @Schema(description = "List of devices assigned to company", example = "CREDIT")
+    private List<DeviceDTO> devices;
 
     // Simple constructor
     public CompanyBalanceResponse(String inn, String name, BigDecimal balance) {
@@ -58,14 +61,16 @@ public class CompanyBalanceResponse {
             BigDecimal balance,
             Long monthsElapsed,
             List<MonthlyCharge> monthlyBreakdown,
-            BillingInfo billingInfo
+            BigDecimal monthlyRate,
+            List<DeviceDTO> devices
     ) {
         this.inn = inn;
         this.name = name;
         this.balance = balance;
         this.monthsElapsed = monthsElapsed;
         this.monthlyBreakdown = monthlyBreakdown;
-        this.billingInfo = billingInfo;
+        this.monthlyRate = monthlyRate;
+        this.devices = devices;
     }
 
     @Data
@@ -87,18 +92,6 @@ public class CompanyBalanceResponse {
 
         @Schema(description = "Is the period specified current or was in past", example = "CURRENT")
         private String status;
-    }
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class BillingInfo {
-
-        @Schema(description = "When did the company start paying", example = "2025-01")
-        private YearMonth billingStartMonth;
-
-        @Schema(description = "How much does company pay each month", example = "100000")
-        private BigDecimal monthlyRate;
     }
 
     @NoArgsConstructor

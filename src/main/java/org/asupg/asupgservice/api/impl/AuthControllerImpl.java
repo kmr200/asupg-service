@@ -1,6 +1,5 @@
 package org.asupg.asupgservice.api.impl;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asupg.asupgservice.api.AuthController;

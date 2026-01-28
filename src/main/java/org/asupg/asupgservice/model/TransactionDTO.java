@@ -2,8 +2,10 @@ package org.asupg.asupgservice.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -26,12 +28,15 @@ import java.util.Objects;
                 def = "{ 'counterpartyInn': 1, 'transactionType': 1 }"
         )
 })
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionDTO {
 
     @Id
     private String transactionId;
 
     private String counterpartyInn;
+
+    private String deviceId;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate date;

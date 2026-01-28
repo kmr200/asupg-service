@@ -26,15 +26,13 @@ public class CompanyControllerImpl implements CompanyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CompanyDTO> createCompany(
             @Validated @RequestBody CreateCompanyRequest createCompanyRequest
     ) {
         CompanyDTO companyDTO = companyService.createCompany(
                 createCompanyRequest.getInn(),
                 createCompanyRequest.getName(),
-                createCompanyRequest.getMonthlyRate(),
-                createCompanyRequest.getBillingStartMonth(),
                 createCompanyRequest.getEmail(),
                 createCompanyRequest.getPhone()
         );
@@ -50,10 +48,6 @@ public class CompanyControllerImpl implements CompanyController {
         CompanySearchResponse response = companyService.getCompanies(
                 companyDebtSearchRequest.getMinBalance(),
                 companyDebtSearchRequest.getMaxBalance(),
-                companyDebtSearchRequest.getSubscriptionStartDateFrom(),
-                companyDebtSearchRequest.getSubscriptionStartDateTo(),
-                companyDebtSearchRequest.getBillingStartMonthFrom(),
-                companyDebtSearchRequest.getBillingStartMonthTo(),
                 companyDebtSearchRequest.getStatus(),
                 companyDebtSearchRequest.getLimit(),
                 companyDebtSearchRequest.getCursor(),

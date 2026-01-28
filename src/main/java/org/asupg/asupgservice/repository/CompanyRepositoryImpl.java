@@ -13,8 +13,6 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.Base64;
 import java.util.List;
 
@@ -69,10 +67,6 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
     public MongoPageResponse<CompanyDTO> findCompanies(
             BigDecimal minBalance,
             BigDecimal maxBalance,
-            LocalDate subscriptionStartDateFrom,
-            LocalDate subscriptionStartDateTo,
-            YearMonth billingStartMonthFrom,
-            YearMonth billingStartMonthTo,
             CompanyStatus status,
             Integer limit,
             String cursor,
@@ -86,14 +80,6 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
             query.addCriteria(Criteria.where("currentBalance").gte(minBalance));
         if (maxBalance != null)
             query.addCriteria(Criteria.where("currentBalance").lte(maxBalance));
-        if (subscriptionStartDateFrom != null)
-            query.addCriteria(Criteria.where("subscriptionStartDate").gte(subscriptionStartDateFrom));
-        if (subscriptionStartDateTo != null)
-            query.addCriteria(Criteria.where("subscriptionStartDate").lte(subscriptionStartDateTo));
-        if (billingStartMonthFrom != null)
-            query.addCriteria(Criteria.where("billingStartMonth").gte(billingStartMonthFrom.toString()));
-        if (billingStartMonthTo != null)
-            query.addCriteria(Criteria.where("billingStartMonth").lte(billingStartMonthTo.toString()));
         if (status != null)
             query.addCriteria(Criteria.where("status").is(status));
 
