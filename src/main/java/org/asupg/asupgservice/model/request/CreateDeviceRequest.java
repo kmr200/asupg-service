@@ -2,6 +2,7 @@ package org.asupg.asupgservice.model.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,7 +28,10 @@ public class CreateDeviceRequest {
     private String deviceName;
 
     @NotBlank(message = ValidationDoc.INN_BLANK_MESSAGE)
-    @Size(min = 9, max = 9, message = ValidationDoc.INN_SIZE_MESSAGE)
+    @Pattern(
+            regexp = "^\\d{9}|\\d{14}$",
+            message = ValidationDoc.INN_SIZE_MESSAGE
+    )
     @Schema(description = "INN of the company to assign the device", example = "123456789", requiredMode = Schema.RequiredMode.REQUIRED)
     private String companyInn;
 

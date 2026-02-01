@@ -90,7 +90,7 @@ public interface CompanyController {
                                     {
                                         "timestamp": "timestamp",
                                         "status": 409,
-                                        "error": "Validation failed",
+                                        "error": "Conflict",
                                         "message": "Company with id: {id} already exists",
                                         "path": "/api/asupg-service/v1/companies"
                                     }

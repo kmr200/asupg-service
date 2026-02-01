@@ -24,6 +24,10 @@ management:
       enabled: true
 
 
+asupg-workers:
+  url: ${asupg-workers.url}
+
+
 server:
   servlet:
     context-path: /api/asupg-service

@@ -40,6 +40,6 @@ public class DeviceControllerImpl implements DeviceController {
                 createDeviceRequest.getStatus()
         );
 
-        return new ResponseEntity<>(device, HttpStatus.OK);
+        return new ResponseEntity<>(device, HttpStatus.CREATED);
     }
 }
