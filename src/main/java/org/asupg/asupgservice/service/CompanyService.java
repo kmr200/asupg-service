@@ -6,9 +6,11 @@ import org.asupg.asupgservice.model.request.CompanySearchRequest;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
 import org.asupg.asupgservice.model.response.CompanySearchResponse;
+import org.asupg.asupgservice.model.response.TotalDebt;
 import org.asupg.asupgservice.repository.CompanyRepository;
 import org.asupg.asupgservice.repository.DeviceRepository;
 import org.asupg.asupgservice.repository.TransactionRepository;
+import org.bson.types.Decimal128;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
@@ -210,5 +212,9 @@ public class CompanyService {
         }
 
         return new CompanySearchResponse(page.getItems(), page.getNextCursor());
+    }
+
+    public TotalDebt getCompaniesTotalDebt() {
+        return companyRepository.getTotalNegativeBalance();
     }
 }

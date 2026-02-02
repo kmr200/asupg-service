@@ -41,7 +41,7 @@ public class JobAdminControllerImpl implements JobAdminController {
     @PostMapping("/report-ingestion")
     public ResponseEntity<Void> triggerReportIngestion(
             @RequestParam(required = false) LocalDate from,
-            @RequestParam(required = false)LocalDate to
+            @RequestParam(required = false) LocalDate to
     ) {
         if ((from == null && to != null) || (from != null && to == null)) {
             return ResponseEntity.badRequest().build();
