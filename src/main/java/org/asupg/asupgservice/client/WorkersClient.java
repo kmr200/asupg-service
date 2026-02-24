@@ -9,7 +9,8 @@ import java.time.LocalDate;
 
 @FeignClient(
         name = "job-service",
-        url = "${asupg-workers.url}"
+        url = "${asupg-workers.url}",
+        configuration = WorkersClientConfig.class
 )
 public interface WorkersClient {
 

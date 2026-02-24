@@ -1,5 +1,6 @@
 package org.asupg.asupgservice.model.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import java.util.List;
 @Schema(description = "Response class for generic error messages")
 public class ErrorResponse {
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSS")
     @Schema(description = "When the exception error was thrown")
     private LocalDateTime timestamp;
 
