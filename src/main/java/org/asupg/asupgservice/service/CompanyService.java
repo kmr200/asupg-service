@@ -144,7 +144,8 @@ public class CompanyService {
             BigDecimal maxBalance,
             int limit,
             String continuationToken,
-            SortOrder sortOrder
+            SortOrder sortOrder,
+            String search
     ) {
         MongoPageResponse<CompanyDTO> page;
 
@@ -154,7 +155,8 @@ public class CompanyService {
                     maxBalance,
                     limit,
                     continuationToken,
-                    sortOrder
+                    sortOrder,
+                    search
             );
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("Cursor sort field mismatch")) {
@@ -187,7 +189,8 @@ public class CompanyService {
             Integer limit,
             String cursor,
             CompanySearchRequest.SortBy sortBy,
-            SortOrder sortOrder
+            SortOrder sortOrder,
+            String search
     ) {
 
         MongoPageResponse<CompanyDTO> page;
@@ -200,7 +203,8 @@ public class CompanyService {
                     limit,
                     cursor,
                     sortBy,
-                    sortOrder
+                    sortOrder,
+                    search
             );
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("Cursor sort field mismatch")) {

@@ -69,6 +69,7 @@ public class CompanyDTO {
     ) {
         this.inn = inn;
         this.name = name;
+        this.currentBalance = BigDecimal.ZERO;
         this.status = status;
         this.email = email;
         this.phone = phone;

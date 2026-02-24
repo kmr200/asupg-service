@@ -53,7 +53,8 @@ public class CompanyControllerImpl implements CompanyController {
                 companyDebtSearchRequest.getLimit(),
                 companyDebtSearchRequest.getCursor(),
                 companyDebtSearchRequest.getSortBy(),
-                companyDebtSearchRequest.getSortOrder()
+                companyDebtSearchRequest.getSortOrder(),
+                companyDebtSearchRequest.getSearch()
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -92,7 +93,8 @@ public class CompanyControllerImpl implements CompanyController {
                 maxBalance,
                 companyDebtSearchRequest.getLimit() == null ? 50 : companyDebtSearchRequest.getLimit(),
                 companyDebtSearchRequest.getContinuationToken(),
-                companyDebtSearchRequest.getSortOrder()
+                companyDebtSearchRequest.getSortOrder(),
+                companyDebtSearchRequest.getSearch()
         );
 
         return new ResponseEntity<>(companiesInDebt, HttpStatus.OK);

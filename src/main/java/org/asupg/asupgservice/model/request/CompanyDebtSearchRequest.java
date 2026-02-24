@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,5 +38,9 @@ public class CompanyDebtSearchRequest {
     @JsonProperty(defaultValue = "DESC")
     @Schema(description = "Sorting order by balance of the company", defaultValue = "DESC", example = "ASC", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     SortOrder sortOrder = SortOrder.DESC;
+
+    @Size(max = 100)
+    @Schema(description = "Search field for searching from company INN or company name, case insensitive", example = "123", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    String search;
 
 }

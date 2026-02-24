@@ -25,7 +25,7 @@ public class CompanySearchResponse {
     @Schema(description = "Are there any more pages")
     boolean hasMore;
 
-    @Schema(description = "Continuation token to retrieve next page", example = "token")
+    @Schema(description = "Cursor token to retrieve next page", example = "token")
     String nextCursor;
 
     public CompanySearchResponse(List<CompanyDTO> companies, String nextCursor) {

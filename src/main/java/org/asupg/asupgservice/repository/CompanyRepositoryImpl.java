@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Repository
@@ -34,7 +35,8 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
             BigDecimal maxBalance,
             int limit,
             String cursor,
-            SortOrder sortOrder
+            SortOrder sortOrder,
+            String search
     ) {
 
         Query query = new Query();
@@ -46,6 +48,15 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
         }
         if (maxBalance != null) {
             query.addCriteria(Criteria.where("currentBalance").lt(maxBalance));
+        }
+
+        if (search != null && !search.isBlank()) {
+            String escapedSearch = Pattern.quote(search.trim());
+            Pattern searchPattern = Pattern.compile(escapedSearch, Pattern.CASE_INSENSITIVE);
+            query.addCriteria(new Criteria().orOperator(
+                    Criteria.where("inn").regex(searchPattern),
+                    Criteria.where("name").regex(searchPattern)
+            ));
         }
 
         Sort.Direction direction =
@@ -71,7 +82,8 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
             Integer limit,
             String cursor,
             CompanySearchRequest.SortBy sortBy,
-            SortOrder sortOrder
+            SortOrder sortOrder,
+            String search
     ) {
 
         Query query = new Query();
@@ -82,6 +94,15 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
             query.addCriteria(Criteria.where("currentBalance").lte(maxBalance));
         if (status != null)
             query.addCriteria(Criteria.where("status").is(status));
+
+        if (search != null && !search.isBlank()) {
+            String escapedSearch = Pattern.quote(search.trim());
+            Pattern searchPattern = Pattern.compile(escapedSearch, Pattern.CASE_INSENSITIVE);
+            query.addCriteria(new Criteria().orOperator(
+                    Criteria.where("inn").regex(searchPattern),
+                    Criteria.where("name").regex(searchPattern)
+            ));
+        }
 
         CompanySearchRequest.SortBy effectiveSortBy =
                 sortBy != null ? sortBy : CompanySearchRequest.SortBy.NAME;

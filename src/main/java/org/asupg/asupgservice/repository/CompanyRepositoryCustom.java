@@ -15,7 +15,8 @@ public interface CompanyRepositoryCustom {
             BigDecimal maxDebt,
             int limit,
             String cursor,
-            SortOrder sortOrder
+            SortOrder sortOrder,
+            String search
     );
 
     MongoPageResponse<CompanyDTO> findCompanies(
@@ -25,6 +26,7 @@ public interface CompanyRepositoryCustom {
             Integer limit,
             String cursor,
             CompanySearchRequest.SortBy sortBy,
-            SortOrder sortOrder
+            SortOrder sortOrder,
+            String search
     );
 }
