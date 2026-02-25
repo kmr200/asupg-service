@@ -32,8 +32,8 @@ public class CompanyDebtSearchRequest {
     @Schema(description = "Maximum elements per page", defaultValue = "10", example = "5", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     Integer limit = 10;
 
-    @Schema(description = "Continuation token to retrieve next page", example = "token", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    String continuationToken;
+    @Schema(description = "Cursor to retrieve next page", example = "token", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    String cursor;
 
     @JsonProperty(defaultValue = "DESC")
     @Schema(description = "Sorting order by balance of the company", defaultValue = "DESC", example = "ASC", requiredMode = Schema.RequiredMode.NOT_REQUIRED)

@@ -92,7 +92,7 @@ public class CompanyControllerImpl implements CompanyController {
                 minBalance,
                 maxBalance,
                 companyDebtSearchRequest.getLimit() == null ? 50 : companyDebtSearchRequest.getLimit(),
-                companyDebtSearchRequest.getContinuationToken(),
+                companyDebtSearchRequest.getCursor(),
                 companyDebtSearchRequest.getSortOrder(),
                 companyDebtSearchRequest.getSearch()
         );

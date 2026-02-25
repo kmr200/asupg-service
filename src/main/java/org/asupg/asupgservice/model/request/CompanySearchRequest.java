@@ -57,7 +57,7 @@ public class CompanySearchRequest {
 
     @AllArgsConstructor
     @Getter
-    public enum SortBy {
+    public enum SortBy implements SortableField<CompanyDTO> {
 
         CURRENT_BALANCE(
                 "currentBalance",
@@ -81,10 +81,7 @@ public class CompanySearchRequest {
 
         @JsonCreator
         public static SortBy fromValue(String value) {
-            return Arrays.stream(values())
-                    .filter(s -> s.mongoField.equals(value))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Unsupported sort field: " + value));
+            return SortableField.fromValue(value, SortBy.class);
         }
 
         @JsonValue

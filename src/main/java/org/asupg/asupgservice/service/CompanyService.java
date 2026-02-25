@@ -142,29 +142,20 @@ public class CompanyService {
             BigDecimal minBalance,
             BigDecimal maxBalance,
             int limit,
-            String continuationToken,
+            String cursor,
             SortOrder sortOrder,
             String search
     ) {
         MongoPageResponse<CompanyDTO> page;
 
-        try {
-            page = companyRepository.findCompaniesInDebt(
-                    minBalance,
-                    maxBalance,
-                    limit,
-                    continuationToken,
-                    sortOrder,
-                    search
-            );
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("Cursor sort field mismatch")) {
-                throw new AppException(400, "Validation failed", "Invalid cursor");
-            } else {
-                logger.error(e.getMessage());
-                throw e;
-            }
-        }
+        page = companyRepository.findCompaniesInDebt(
+                minBalance,
+                maxBalance,
+                limit,
+                cursor,
+                sortOrder,
+                search
+        );
 
         List<CompanyDebtResponse.CompanyDebtDetails> data = page.getItems().stream()
                 .map(
@@ -194,25 +185,16 @@ public class CompanyService {
 
         MongoPageResponse<CompanyDTO> page;
 
-        try {
-            page = companyRepository.findCompanies(
-                    minBalance,
-                    maxBalance,
-                    status,
-                    limit,
-                    cursor,
-                    sortBy,
-                    sortOrder,
-                    search
-            );
-        } catch (IllegalArgumentException e) {
-            if (e.getMessage().contains("Cursor sort field mismatch")) {
-                throw new AppException(400, "Validation failed", "Invalid cursor");
-            } else {
-                logger.error(e.getMessage());
-                throw e;
-            }
-        }
+        page = companyRepository.findCompanies(
+                minBalance,
+                maxBalance,
+                status,
+                limit,
+                cursor,
+                sortBy,
+                sortOrder,
+                search
+        );
 
         return new CompanySearchResponse(page.getItems(), page.getNextCursor());
     }

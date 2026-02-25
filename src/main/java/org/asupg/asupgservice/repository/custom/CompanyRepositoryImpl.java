@@ -1,10 +1,14 @@
 package org.asupg.asupgservice.repository.custom;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.asupg.asupgservice.model.*;
+import org.asupg.asupgservice.model.CompanyDTO;
+import org.asupg.asupgservice.model.CompanyStatus;
+import org.asupg.asupgservice.model.MongoPageResponse;
+import org.asupg.asupgservice.model.SortOrder;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
+import org.asupg.asupgservice.util.PaginationUtil;
+import org.bson.types.Decimal128;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -12,22 +16,23 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
 
-    private final MongoTemplate mongoTemplate;
-    private final ObjectMapper objectMapper;
+    private static final String CURRENT_BALANCE_FIELD = "currentBalance";
+    private static final String INN_FIELD = "inn";
+    private static final String NAME_FIELD = "name";
+    private static final String STATUS_FIELD = "status";
 
-    public CompanyRepositoryImpl(MongoTemplate mongoTemplate, ObjectMapper objectMapper) {
-        this.mongoTemplate = mongoTemplate;
-        this.objectMapper = objectMapper;
-    }
+    private final MongoTemplate mongoTemplate;
+    private final PaginationUtil paginationUtil;
 
     @Override
     public MongoPageResponse<CompanyDTO> findCompaniesInDebt(
@@ -38,24 +43,23 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
             SortOrder sortOrder,
             String search
     ) {
-
         Query query = new Query();
+        Map<String, Criteria> criteriaMap = new HashMap<>();
 
-        query.addCriteria(Criteria.where("currentBalance").lt(BigDecimal.ZERO));
+        // currentBalance < 0 is the base condition
+        Criteria balanceCriteria = Criteria.where(CURRENT_BALANCE_FIELD).lt(Decimal128.parse(BigDecimal.ZERO.toPlainString()));
+        if (minBalance != null) balanceCriteria = balanceCriteria.gte(Decimal128.parse(minBalance.toPlainString()));
+        if (maxBalance != null) balanceCriteria = balanceCriteria.lt(Decimal128.parse(maxBalance.toPlainString()));
+        criteriaMap.put(CURRENT_BALANCE_FIELD, balanceCriteria);
 
-        if (minBalance != null) {
-            query.addCriteria(Criteria.where("currentBalance").gte(minBalance));
-        }
-        if (maxBalance != null) {
-            query.addCriteria(Criteria.where("currentBalance").lt(maxBalance));
-        }
+        criteriaMap.values().forEach(query::addCriteria);
 
         if (search != null && !search.isBlank()) {
             String escapedSearch = Pattern.quote(search.trim());
             Pattern searchPattern = Pattern.compile(escapedSearch, Pattern.CASE_INSENSITIVE);
             query.addCriteria(new Criteria().orOperator(
-                    Criteria.where("inn").regex(searchPattern),
-                    Criteria.where("name").regex(searchPattern)
+                    Criteria.where(INN_FIELD).regex(searchPattern),
+                    Criteria.where(NAME_FIELD).regex(searchPattern)
             ));
         }
 
@@ -67,11 +71,10 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
         query.with(Sort.by(direction, sortBy.getValue(), "_id"));
         query.limit(limit + 1);
 
-        applyCursor(query, cursor, sortBy, direction);
+        paginationUtil.applyCursor(query, cursor, sortBy, direction);
 
         List<CompanyDTO> results = mongoTemplate.find(query, CompanyDTO.class);
-
-        return buildPage(results, limit, sortBy);
+        return paginationUtil.buildPage(results, limit, sortBy, CompanyDTO::getInn);
     }
 
     @Override
@@ -85,134 +88,51 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
             SortOrder sortOrder,
             String search
     ) {
-
         Query query = new Query();
+        Map<String, Criteria> criteriaMap = new HashMap<>();
 
-        if (minBalance != null)
-            query.addCriteria(Criteria.where("currentBalance").gte(minBalance));
-        if (maxBalance != null)
-            query.addCriteria(Criteria.where("currentBalance").lte(maxBalance));
-        if (status != null)
-            query.addCriteria(Criteria.where("status").is(status));
+        // Balance range
+        Criteria balanceCriteria = new Criteria(CURRENT_BALANCE_FIELD);
+        if (minBalance != null) balanceCriteria = balanceCriteria.gte(Decimal128.parse(minBalance.toPlainString()));
+        if (maxBalance != null) balanceCriteria = balanceCriteria.lte(Decimal128.parse(maxBalance.toPlainString()));
+        if (minBalance != null || maxBalance != null) criteriaMap.put(CURRENT_BALANCE_FIELD, balanceCriteria);
+
+        if (status != null) {
+            criteriaMap.put(STATUS_FIELD, Criteria.where(STATUS_FIELD).is(status));
+        }
 
         if (search != null && !search.isBlank()) {
             String escapedSearch = Pattern.quote(search.trim());
             Pattern searchPattern = Pattern.compile(escapedSearch, Pattern.CASE_INSENSITIVE);
             query.addCriteria(new Criteria().orOperator(
-                    Criteria.where("inn").regex(searchPattern),
-                    Criteria.where("name").regex(searchPattern)
+                    Criteria.where(INN_FIELD).regex(searchPattern),
+                    Criteria.where(NAME_FIELD).regex(searchPattern)
             ));
         }
 
         CompanySearchRequest.SortBy effectiveSortBy =
                 sortBy != null ? sortBy : CompanySearchRequest.SortBy.NAME;
 
+        String sortField = effectiveSortBy.getValue();
+
+        if (criteriaMap.containsKey(sortField)) {
+            criteriaMap.put(sortField, criteriaMap.get(sortField).ne(null));
+        } else {
+            criteriaMap.put(sortField, Criteria.where(sortField).ne(null));
+        }
+
+        criteriaMap.values().forEach(query::addCriteria);
+
         Sort.Direction direction =
                 sortOrder == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        query.addCriteria(
-                Criteria.where(effectiveSortBy.getValue()).ne(null)
-        );
-
-        query.with(Sort.by(direction, effectiveSortBy.getValue(), "_id"));
+        query.with(Sort.by(direction, sortField, "_id"));
         query.limit(limit + 1);
 
-        applyCursor(query, cursor, effectiveSortBy, direction);
+        paginationUtil.applyCursor(query, cursor, effectiveSortBy, direction);
 
         List<CompanyDTO> results = mongoTemplate.find(query, CompanyDTO.class);
-
-        return buildPage(results, limit, effectiveSortBy);
-
-    }
-
-    private void applyCursor(
-            Query query,
-            String cursor,
-            CompanySearchRequest.SortBy sortBy,
-            Sort.Direction direction
-    ) {
-        if (cursor == null || cursor.isBlank()) return;
-
-        CursorPayload payload = decodeCursor(cursor);
-
-        CompanySearchRequest.SortBy cursorSortBy =
-                CompanySearchRequest.SortBy.valueOf(payload.sortBy());
-
-        if (cursorSortBy != sortBy) {
-            throw new IllegalArgumentException("Cursor sort field mismatch");
-        }
-
-        Object sortValue = cursorSortBy.getParser().apply(payload.sortValue());
-        String id = payload.id();
-
-        Criteria cursorCriteria = new Criteria().orOperator(
-                direction == Sort.Direction.ASC
-                        ? Criteria.where(sortBy.getValue()).gt(sortValue)
-                        : Criteria.where(sortBy.getValue()).lt(sortValue),
-
-                new Criteria().andOperator(
-                        Criteria.where(sortBy.getValue()).is(sortValue),
-                        direction == Sort.Direction.ASC
-                                ? Criteria.where("_id").gt(id)
-                                : Criteria.where("_id").lt(id)
-                )
-        );
-
-        query.addCriteria(cursorCriteria);
-    }
-
-    private MongoPageResponse<CompanyDTO> buildPage(
-            List<CompanyDTO> results,
-            int limit,
-            CompanySearchRequest.SortBy sortBy
-    ) {
-        boolean hasNext = results.size() > limit;
-
-        if (hasNext) {
-            results.remove(limit);
-        }
-
-        String nextCursor = null;
-        if (hasNext) {
-            CompanyDTO last = results.getLast();
-            Object sortValue = sortBy.getExtractor().apply(last);
-
-            nextCursor = encodeCursor(
-                    sortBy,
-                    sortValue,
-                    last.getInn()
-            );
-        }
-
-        return new MongoPageResponse<>(results, nextCursor);
-    }
-
-    private String encodeCursor(
-            CompanySearchRequest.SortBy sortBy,
-            Object sortValue,
-            String id
-    ) {
-        CursorPayload payload = new CursorPayload(
-                sortBy.name(),
-                sortValue.toString(),
-                id
-        );
-
-        try {
-            String json = objectMapper.writeValueAsString(payload);
-            return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Failed to encode cursor", e);
-        }
-    }
-
-    private CursorPayload decodeCursor(String cursor) {
-        try {
-            byte[] decoded = Base64.getUrlDecoder().decode(cursor);
-            return objectMapper.readValue(decoded, CursorPayload.class);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid cursor", e);
-        }
+        return paginationUtil.buildPage(results, limit, effectiveSortBy, CompanyDTO::getInn);
     }
 
 }

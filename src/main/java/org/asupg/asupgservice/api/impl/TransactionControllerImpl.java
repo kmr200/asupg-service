@@ -37,6 +37,17 @@ public class TransactionControllerImpl implements TransactionController {
             @RequestBody @Validated TransactionSearchRequest transactionSearchRequest
     ) {
         TransactionSearchResponse response = transactionService.getCompanies(
+                transactionSearchRequest.getFromDate(),
+                transactionSearchRequest.getToDate(),
+                transactionSearchRequest.getMinAmount(),
+                transactionSearchRequest.getMaxAmount(),
+                transactionSearchRequest.getTransactionType(),
+                transactionSearchRequest.getReconciliationStatus(),
+                transactionSearchRequest.getLimit(),
+                transactionSearchRequest.getCursor(),
+                transactionSearchRequest.getSortBy(),
+                transactionSearchRequest.getSortOrder(),
+                transactionSearchRequest.getSearch()
         );
 
         return new ResponseEntity<>(response, HttpStatus.OK);
