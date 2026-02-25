@@ -10,7 +10,6 @@ import org.asupg.asupgservice.model.response.TotalDebt;
 import org.asupg.asupgservice.repository.CompanyRepository;
 import org.asupg.asupgservice.repository.DeviceRepository;
 import org.asupg.asupgservice.repository.TransactionRepository;
-import org.bson.types.Decimal128;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;

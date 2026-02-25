@@ -1,4 +1,4 @@
-package org.asupg.asupgservice.repository;
+package org.asupg.asupgservice.repository.custom;
 
 import org.asupg.asupgservice.model.CompanyDTO;
 import org.asupg.asupgservice.model.CompanyStatus;

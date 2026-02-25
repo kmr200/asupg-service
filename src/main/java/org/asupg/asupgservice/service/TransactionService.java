@@ -2,6 +2,7 @@ package org.asupg.asupgservice.service;
 
 import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.TransactionDTO;
+import org.asupg.asupgservice.model.response.TransactionSearchResponse;
 import org.asupg.asupgservice.repository.TransactionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,5 +23,9 @@ public class TransactionService {
         return repository.findById(id).orElseThrow(
                 () -> new AppException(404, "Invalid transaction id", "Transaction with id: " + id + " not found")
         );
+    }
+
+    public TransactionSearchResponse getCompanies() {
+        return null;
     }
 }

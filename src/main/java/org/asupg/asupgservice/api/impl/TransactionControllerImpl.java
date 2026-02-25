@@ -2,14 +2,16 @@ package org.asupg.asupgservice.api.impl;
 
 import org.asupg.asupgservice.api.TransactionController;
 import org.asupg.asupgservice.model.TransactionDTO;
+import org.asupg.asupgservice.model.request.CompanySearchRequest;
+import org.asupg.asupgservice.model.request.TransactionSearchRequest;
+import org.asupg.asupgservice.model.response.CompanySearchResponse;
+import org.asupg.asupgservice.model.response.TransactionSearchResponse;
 import org.asupg.asupgservice.service.TransactionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v1/transactions")
@@ -27,6 +29,17 @@ public class TransactionControllerImpl implements TransactionController {
         TransactionDTO transaction = transactionService.getTransactionById(id);
 
         return new ResponseEntity<>(transaction, HttpStatus.OK);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    public ResponseEntity<TransactionSearchResponse> getCompanies(
+            @RequestBody @Validated TransactionSearchRequest transactionSearchRequest
+    ) {
+        TransactionSearchResponse response = transactionService.getCompanies(
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
 }

@@ -1,4 +1,4 @@
-package org.asupg.asupgservice.repository;
+package org.asupg.asupgservice.repository.custom;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
