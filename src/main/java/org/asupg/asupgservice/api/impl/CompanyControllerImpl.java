@@ -16,6 +16,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+
 @RestController
 @RequestMapping("/v1/companies")
 public class CompanyControllerImpl implements CompanyController {
@@ -82,11 +84,10 @@ public class CompanyControllerImpl implements CompanyController {
             @RequestBody @Validated CompanyDebtSearchRequest companyDebtSearchRequest
     ) {
 
-        var minBalance = companyDebtSearchRequest.getMinBalance();
-        var maxBalance = companyDebtSearchRequest.getMaxBalance();
-
-        minBalance = minBalance == null ? minBalance : minBalance.abs().negate();
-        maxBalance = maxBalance == null ? maxBalance : maxBalance.abs().negate();
+        // User's max debt -> least negative floor
+        BigDecimal minBalance = toInternalBalance(companyDebtSearchRequest.getMaxDebt());
+        // User's min debt -> most negative ceiling
+        BigDecimal maxBalance = toInternalBalance(companyDebtSearchRequest.getMinDebt());
 
         CompanyDebtResponse companiesInDebt = companyService.getCompaniesInDebt(
                 minBalance,
@@ -103,8 +104,14 @@ public class CompanyControllerImpl implements CompanyController {
     @GetMapping("/debtors/total-debt")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<TotalDebt> getCompaniesTotalDebt() {
-        TotalDebt totalDebt = companyService.getCompaniesTotalDebt();
-        return new ResponseEntity<>(totalDebt, HttpStatus.OK);
+        BigDecimal totalDebt = companyService.getCompaniesTotalDebt();
+        TotalDebt totalDebtResponse = new TotalDebt(totalDebt);
+
+        return new ResponseEntity<>(totalDebtResponse, HttpStatus.OK);
+    }
+
+    private BigDecimal toInternalBalance(BigDecimal debtAmount) {
+        return debtAmount == null ? null : debtAmount.abs().negate();
     }
 
 }

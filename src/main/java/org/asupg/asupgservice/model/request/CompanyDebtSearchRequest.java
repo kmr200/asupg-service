@@ -20,11 +20,11 @@ import java.math.BigDecimal;
 @Schema(description = "Request class for searching companies in debt")
 public class CompanyDebtSearchRequest {
 
-    @Schema(description = "Minimum currentBalance of the company. Automatically converted to negative value", example = "-100000", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    BigDecimal minBalance;
+    @Schema(description = "Minimum debt of the company. Automatically converted to negative value", example = "-100000", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    BigDecimal minDebt;
 
-    @Schema(description = "Maximum currentBalance of the company", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    BigDecimal maxBalance;
+    @Schema(description = "Maximum debt of the company", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    BigDecimal maxDebt;
 
     @Min(1)
     @Max(100)

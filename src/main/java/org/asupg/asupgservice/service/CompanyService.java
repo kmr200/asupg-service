@@ -199,7 +199,11 @@ public class CompanyService {
         return new CompanySearchResponse(page.getItems(), page.getNextCursor());
     }
 
-    public TotalDebt getCompaniesTotalDebt() {
-        return companyRepository.getTotalNegativeBalance();
+    public BigDecimal getCompaniesTotalDebt() {
+        return companyRepository.getTotalNegativeBalance().getResult();
+    }
+
+    public BigDecimal getCompaniesTotalBalance() {
+        return companyRepository.getTotalBalance().getResult();
     }
 }
