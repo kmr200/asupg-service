@@ -7,6 +7,7 @@ import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.UserDTO;
 import org.asupg.asupgservice.model.request.LoginRequest;
 import org.asupg.asupgservice.model.request.RegisterUserRequest;
+import org.asupg.asupgservice.model.request.UpdateUserRequest;
 import org.asupg.asupgservice.model.response.LoginResponse;
 import org.asupg.asupgservice.service.AuthService;
 import org.asupg.asupgservice.service.JwtService;
@@ -20,10 +21,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -82,6 +82,50 @@ public class AuthControllerImpl implements AuthController {
         );
 
         return new ResponseEntity<>(user, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        List<UserDTO> users = authService.getAllUsers();
+
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @GetMapping("/{username}")
+    public ResponseEntity<UserDTO> getUser(
+            @PathVariable String username
+    ) {
+        UserDTO user = authService.getUser(username);
+
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDTO> deleteUser(
+            @PathVariable String username
+    ) {
+        UserDTO user = authService.deleteUser(username);
+
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    @PatchMapping("/{username}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserDTO> updateUser(
+            @PathVariable String username,
+            @Validated @RequestBody UpdateUserRequest updateUserRequest
+    ) {
+        UserDTO user = authService.updateUser(
+                username,
+                updateUserRequest.getFirstName(),
+                updateUserRequest.getLastName(),
+                updateUserRequest.getPassword(),
+                updateUserRequest.getRoles(),
+                updateUserRequest.getLocked()
+        );
+
+        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
 }

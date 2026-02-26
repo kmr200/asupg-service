@@ -18,11 +18,11 @@ public interface CompanyRepository extends MongoRepository<CompanyDTO, String>, 
             "{ $group: { _id: null, result: { $sum: '$currentBalance' } } }",
             "{ $project: { _id: 0, result: 1 } }"
     })
-    AggregationResult<BigDecimal> getTotalNegativeBalance();
+    AggregationResult getTotalNegativeBalance();
 
     @Aggregation(pipeline = {
             "{ $group: { _id: null, result: { $sum: '$currentBalance' } } }",
             "{ $project: { _id: 0, result: 1 } }"
     })
-    AggregationResult<BigDecimal> getTotalBalance();
+    AggregationResult getTotalBalance();
 }

@@ -101,15 +101,6 @@ public class CompanyControllerImpl implements CompanyController {
         return new ResponseEntity<>(companiesInDebt, HttpStatus.OK);
     }
 
-    @GetMapping("/debtors/total-debt")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<TotalDebt> getCompaniesTotalDebt() {
-        BigDecimal totalDebt = companyService.getCompaniesTotalDebt();
-        TotalDebt totalDebtResponse = new TotalDebt(totalDebt);
-
-        return new ResponseEntity<>(totalDebtResponse, HttpStatus.OK);
-    }
-
     private BigDecimal toInternalBalance(BigDecimal debtAmount) {
         return debtAmount == null ? null : debtAmount.abs().negate();
     }

@@ -8,6 +8,7 @@ import org.asupg.asupgservice.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -42,10 +43,53 @@ public class AuthService {
 
         user = userRepository.save(user);
 
-        // Hide users password hash
-        user.setPasswordHash(null);
+        return user;
+    }
+
+    public UserDTO deleteUser(String username) {
+        log.debug("Deleting user {}", username);
+
+        UserDTO user = getUser(username);
+
+        userRepository.delete(user);
 
         return user;
     }
 
+    public UserDTO getUser(String username) {
+        return userRepository.findById(username).orElseThrow(
+                () -> new AppException(404, "Validation failed", "User with username: " + username + " not found")
+        );
+    }
+
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public UserDTO updateUser(
+            String username,
+            String firstName,
+            String lastName,
+            String password,
+            Set<String> roles,
+            Boolean locked
+    ) {
+        UserDTO user = getUser(username);
+
+        if (isNotEmpty(firstName)) user.setFirstName(firstName);
+        if (isNotEmpty(lastName)) user.setLastName(lastName);
+        if (isNotEmpty(password)) {
+            user.setPasswordHash(
+                    passwordEncoder.encode(password)
+            );
+        }
+        if (roles != null && !roles.isEmpty()) user.setRoles(roles);
+        if (locked != null) user.setLocked(locked);
+
+        return userRepository.save(user);
+    }
+
+    private boolean isNotEmpty(String string) {
+        return string != null && !string.isEmpty();
+    }
 }

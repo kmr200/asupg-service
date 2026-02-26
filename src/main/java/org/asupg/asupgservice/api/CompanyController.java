@@ -15,11 +15,7 @@ import org.asupg.asupgservice.model.request.CreateCompanyRequest;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
 import org.asupg.asupgservice.model.response.CompanySearchResponse;
-import org.asupg.asupgservice.model.response.TotalDebt;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
 
 @Tag(name = "Company endpoints")
 public interface CompanyController {
@@ -279,34 +275,5 @@ public interface CompanyController {
             )
     })
     ResponseEntity<CompanyDebtResponse> getCompanyDebtors(CompanyDebtSearchRequest companyDebtSearchRequest);
-
-    @Operation(
-            summary = "Get total debt", description = "Retrieves total debt of companies", security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = TotalDebt.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    content = @Content(
-                            mediaType = "application/json",
-                            examples = @ExampleObject("""
-                                    {
-                                        "timestamp": "timestamp",
-                                        "status": 401,
-                                        "error": "Authentication failed",
-                                        "message": "Invalid or expired JWT token",
-                                        "path": "/api/asupg-service/v1/companies"
-                                    }
-                                    """)
-                    )
-            )
-    })
-    ResponseEntity<TotalDebt> getCompaniesTotalDebt();
 
 }

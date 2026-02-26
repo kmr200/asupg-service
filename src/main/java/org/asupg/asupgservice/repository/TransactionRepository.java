@@ -23,5 +23,5 @@ public interface TransactionRepository extends MongoRepository<TransactionDTO, S
             "{ $group: { _id: null, result: { $sum: '$amount' } } }",
             "{ $project: { _id: 0, result: 1 } }"
     })
-    AggregationResult<BigDecimal> getTotalNotFoundTransactions();
+    AggregationResult getTotalNotFoundTransactions();
 }

@@ -15,10 +15,13 @@ import java.math.BigDecimal;
 @Schema(description = "Response class for report overview")
 public class OverviewResponse {
 
+    @Schema(description = "Total sum of balances of all companies")
     BigDecimal totalBalance;
 
+    @Schema(description = "Total sum of balances of companies in debt")
     BigDecimal totalDebt;
 
+    @Schema(description = "Total sum of transactions in NOT_FOUND state")
     BigDecimal totalNotFoundTransactions;
 
 }
