@@ -45,7 +45,7 @@ public interface ReportController {
     ResponseEntity<TotalDebt> getCompaniesTotalDebt();
 
     @Operation(
-            summary = "Get total debt", description = "Retrieves total debt of companies", security = @SecurityRequirement(name = "bearerAuth")
+            summary = "Get overview", description = "Retrieves overview of summaries", security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
