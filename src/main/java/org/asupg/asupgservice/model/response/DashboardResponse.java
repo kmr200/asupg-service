@@ -39,12 +39,17 @@ public class DashboardResponse {
             CompanyDashboardResult companyDashboardResult,
             BigDecimal totalDevices
     ) {
-        totalDebt = companyDashboardResult.getTotalDebt().getFirst().getResult();
-        totalBalance = companyDashboardResult.getTotalBalance().getFirst().getResult();
+        totalDebt = companyDashboardResult.getTotalDebt().isEmpty() ?
+                BigDecimal.ZERO : companyDashboardResult.getTotalDebt().getFirst().getResult();
+        totalBalance = companyDashboardResult.getTotalBalance().isEmpty() ?
+                BigDecimal.ZERO : companyDashboardResult.getTotalBalance().getFirst().getResult();
         topDebtors = companyDashboardResult.getTopDebtors();
-        companySummary = companyDashboardResult.getCompanySummary().getFirst();
+        companySummary = companyDashboardResult.getCompanySummary().isEmpty() ?
+                new CompanyDashboardResult.CompanySummary(0, 0, 0, 0) :
+                companyDashboardResult.getCompanySummary().getFirst();
         reconciliationBreakdown = transactionDashboardResult.getReconciliationBreakdown();
         monthlyTrend = transactionDashboardResult.getMonthlyTrend();
         companySummary.setTotalDevices(totalDevices.intValue());
     }
+
 }
