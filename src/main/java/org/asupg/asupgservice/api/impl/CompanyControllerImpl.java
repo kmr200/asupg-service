@@ -2,6 +2,7 @@ package org.asupg.asupgservice.api.impl;
 
 import org.asupg.asupgservice.api.CompanyController;
 import org.asupg.asupgservice.model.CompanyDTO;
+import org.asupg.asupgservice.model.SortOrder;
 import org.asupg.asupgservice.model.request.CompanyDebtSearchRequest;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
 import org.asupg.asupgservice.model.request.CreateCompanyRequest;
@@ -87,13 +88,17 @@ public class CompanyControllerImpl implements CompanyController {
         BigDecimal minBalance = toInternalBalance(companyDebtSearchRequest.getMaxDebt());
         // User's min debt -> most negative ceiling
         BigDecimal maxBalance = toInternalBalance(companyDebtSearchRequest.getMinDebt());
+        // Invert sort order for logical order in negative numbers
+        SortOrder internalSortOrder = companyDebtSearchRequest.getSortOrder() == SortOrder.DESC
+                ? SortOrder.ASC
+                : SortOrder.DESC;
 
         CompanyDebtResponse companiesInDebt = companyService.getCompaniesInDebt(
                 minBalance,
                 maxBalance,
                 companyDebtSearchRequest.getLimit() == null ? 50 : companyDebtSearchRequest.getLimit(),
                 companyDebtSearchRequest.getCursor(),
-                companyDebtSearchRequest.getSortOrder(),
+                internalSortOrder,
                 companyDebtSearchRequest.getSearch()
         );
 
