@@ -10,7 +10,7 @@
     </parent>
     <groupId>org.asupg</groupId>
     <artifactId>asupg-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.5</version>
     <name>asupg-service</name>
     <description>asupg-service</description>
     <url/>
