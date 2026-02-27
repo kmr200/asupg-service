@@ -71,4 +71,5 @@ public class DeviceService {
             throw new AppException(409, "Conflict", "Device with id: " + deviceId + " already exists");
         }
     }
+
 }

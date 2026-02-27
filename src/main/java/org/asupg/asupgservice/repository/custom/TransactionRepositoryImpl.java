@@ -1,28 +1,30 @@
 package org.asupg.asupgservice.repository.custom;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asupg.asupgservice.model.*;
-import org.asupg.asupgservice.model.request.CompanySearchRequest;
 import org.asupg.asupgservice.model.request.TransactionSearchRequest;
 import org.asupg.asupgservice.util.PaginationUtil;
 import org.bson.types.Decimal128;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.DateOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.Base64;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Slf4j
 @Repository
@@ -58,7 +60,7 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
 
         TransactionSearchRequest.SortBy effectiveSortBy =
                 sortBy != null ? sortBy : TransactionSearchRequest.SortBy.DATE;
-        String sortField = effectiveSortBy.getValue(); // move this up
+        String sortField = effectiveSortBy.getValue();
 
         // Date range
         if (fromDate != null) {
@@ -87,15 +89,10 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
             criteriaMap.put(RECONCILIATION_STATUS_FIELD, Criteria.where(RECONCILIATION_STATUS_FIELD).is(reconciliationStatus));
         }
 
-        if (search != null && !search.isBlank()) {
-            String escapedSearch = Pattern.quote(search.trim());
-            Pattern searchPattern = Pattern.compile(escapedSearch, Pattern.CASE_INSENSITIVE);
-            query.addCriteria(new Criteria().orOperator(
-                    Criteria.where(COUNTERPARTY_INN_FIELD).regex(searchPattern),
-                    Criteria.where(DESCRIPTION_FIELD).regex(searchPattern),
-                    Criteria.where(COUNTERPARTY_NAME).regex(searchPattern)
-            ));
-        }
+        // Collect logical criteria to avoid null criteria collisions
+        List<Criteria> logicalCriteria = new ArrayList<>();
+
+        applySearchCriteria(search, logicalCriteria);
 
         criteriaMap.merge(sortField, Criteria.where(sortField).ne(null),
                 (existing, update) -> existing.ne(null));
@@ -103,12 +100,53 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
         criteriaMap.values().forEach(query::addCriteria);
 
         Sort.Direction direction = sortOrder == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
-        query.with(Sort.by(direction, sortField, "_id"));
-        query.limit(limit + 1);
-        paginationUtil.applyCursor(query, cursor, effectiveSortBy, direction);
+        paginationUtil.applySorting(query, sortField, direction, limit);
+        paginationUtil.applyLogicalCriteria(query, logicalCriteria, cursor, effectiveSortBy, direction);
 
         List<TransactionDTO> results = mongoTemplate.find(query, TransactionDTO.class);
         return paginationUtil.buildPage(results, limit, effectiveSortBy, TransactionDTO::getTransactionId);
+    }
+
+    @Override
+    public TransactionDashboardResult getTransactionDashboardAggregation() {
+        Aggregation aggregation = Aggregation.newAggregation(
+                facet()
+                        .and(
+                                match(Criteria.where(RECONCILIATION_STATUS_FIELD).exists(true).ne(null)
+                                        .and(TRANSACTION_TYPE_FIELD).is(TransactionDTO.TransactionType.BANK_PAYMENT)),
+                                group(RECONCILIATION_STATUS_FIELD)
+                                        .count().as("count")
+                                        .sum(AMOUNT_FIELD).as("totalAmount"),
+                                project("count", "totalAmount").and("_id").as("status").andExclude("_id")
+                        ).as("reconciliationBreakdown")
+                        .and(
+                                match(Criteria.where(DATE_FIELD).gte(LocalDate.now().minusMonths(6))),
+                                addFields().addField("month").withValue(DateOperators.DateToString.dateOf(DATE_FIELD).toString("%Y-%m")).build(),
+                                group("month")
+                                        .sum(ConditionalOperators
+                                                .when(Criteria.where(TRANSACTION_TYPE_FIELD).is(TransactionDTO.TransactionType.MONTHLY_CHARGE))
+                                                .then(ArithmeticOperators.Multiply.valueOf("$amount").multiplyBy(-1))
+                                                .otherwise(Decimal128.POSITIVE_ZERO)).as("totalCharged")
+                                        .sum(ConditionalOperators
+                                                .when(Criteria.where(TRANSACTION_TYPE_FIELD).is(TransactionDTO.TransactionType.BANK_PAYMENT))
+                                                .then("$amount").otherwise(Decimal128.POSITIVE_ZERO)).as("totalPaid"),
+                                project("totalCharged", "totalPaid").and("_id").as("month").andExclude("_id"),
+                                sort(Sort.Direction.ASC, "month")
+                        ).as("monthlyTrend")
+        );
+
+        return mongoTemplate.aggregate(aggregation, TransactionDTO.class, TransactionDashboardResult.class)
+                .getUniqueMappedResult();
+    }
+
+    private void applySearchCriteria(String search, List<Criteria> logicalCriteria) {
+        if (search == null || search.isBlank()) return;
+        Pattern searchPattern = Pattern.compile(Pattern.quote(search.trim()), Pattern.CASE_INSENSITIVE);
+        logicalCriteria.add(new Criteria().orOperator(
+                Criteria.where(COUNTERPARTY_INN_FIELD).regex(searchPattern),
+                Criteria.where(DESCRIPTION_FIELD).regex(searchPattern),
+                Criteria.where(COUNTERPARTY_NAME).regex(searchPattern)
+        ));
     }
 
 }

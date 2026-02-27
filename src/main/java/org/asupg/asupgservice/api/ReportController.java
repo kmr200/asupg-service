@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.asupg.asupgservice.model.response.OverviewResponse;
+import org.asupg.asupgservice.model.response.DashboardResponse;
 import org.asupg.asupgservice.model.response.TotalDebt;
 import org.springframework.http.ResponseEntity;
 
@@ -52,7 +52,7 @@ public interface ReportController {
                     responseCode = "200",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = OverviewResponse.class)
+                            schema = @Schema(implementation = DashboardResponse.class)
                     )
             ),
             @ApiResponse(
@@ -71,6 +71,6 @@ public interface ReportController {
                     )
             )
     })
-    public ResponseEntity<OverviewResponse> getOverview();
+    public ResponseEntity<DashboardResponse> getOverview();
 
 }

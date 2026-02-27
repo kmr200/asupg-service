@@ -2,10 +2,9 @@ package org.asupg.asupgservice.api.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.asupg.asupgservice.api.ReportController;
-import org.asupg.asupgservice.model.response.OverviewResponse;
+import org.asupg.asupgservice.model.response.DashboardResponse;
 import org.asupg.asupgservice.model.response.TotalDebt;
-import org.asupg.asupgservice.service.CompanyService;
-import org.asupg.asupgservice.service.TransactionService;
+import org.asupg.asupgservice.service.ReportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,13 +19,12 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class ReportControllerImpl implements ReportController {
 
-    private final CompanyService companyService;
-    private final TransactionService transactionService;
+    private final ReportService reportService;
 
     @GetMapping("/total-debt")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     public ResponseEntity<TotalDebt> getCompaniesTotalDebt() {
-        BigDecimal totalDebt = companyService.getCompaniesTotalDebt();
+        BigDecimal totalDebt = reportService.getCompaniesTotalDebt();
         TotalDebt totalDebtResponse = new TotalDebt(totalDebt);
 
         return new ResponseEntity<>(totalDebtResponse, HttpStatus.OK);
@@ -34,18 +32,10 @@ public class ReportControllerImpl implements ReportController {
 
     @GetMapping("/overview")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<OverviewResponse> getOverview() {
-        var totalBalance = companyService.getCompaniesTotalBalance();
-        var totalDebt = companyService.getCompaniesTotalDebt();
-        var totalNotFoundTransactions = transactionService.getTotalNotFoundTransactions();
+    public ResponseEntity<DashboardResponse> getOverview() {
+        DashboardResponse dashboardResponse = reportService.getDashboard();
 
-        OverviewResponse overviewResponse = new OverviewResponse(
-                totalBalance,
-                totalDebt,
-                totalNotFoundTransactions
-        );
-
-        return new ResponseEntity<>(overviewResponse, HttpStatus.OK);
+        return new ResponseEntity<>(dashboardResponse, HttpStatus.OK);
     }
 
 }

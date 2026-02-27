@@ -8,7 +8,6 @@ import org.asupg.asupgservice.model.request.CreateCompanyRequest;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
 import org.asupg.asupgservice.model.response.CompanySearchResponse;
-import org.asupg.asupgservice.model.response.TotalDebt;
 import org.asupg.asupgservice.service.CompanyService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

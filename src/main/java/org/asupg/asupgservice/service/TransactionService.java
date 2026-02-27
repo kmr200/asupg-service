@@ -65,7 +65,4 @@ public class TransactionService {
         return new TransactionSearchResponse(page.getItems(), page.getNextCursor());
     }
 
-    public BigDecimal getTotalNotFoundTransactions() {
-        return transactionRepository.getTotalNotFoundTransactions().getResult();
-    }
 }

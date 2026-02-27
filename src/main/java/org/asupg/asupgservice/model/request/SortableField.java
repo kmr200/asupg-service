@@ -6,8 +6,11 @@ import java.util.function.Function;
 public interface SortableField<T> {
 
     String name();
+
     String getMongoField();
+
     Function<T, Object> getExtractor();
+
     Function<String, Object> getParser();
 
     default String getValue() {

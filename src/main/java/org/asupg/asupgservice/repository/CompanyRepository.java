@@ -2,13 +2,10 @@ package org.asupg.asupgservice.repository;
 
 import org.asupg.asupgservice.model.AggregationResult;
 import org.asupg.asupgservice.model.CompanyDTO;
-import org.asupg.asupgservice.model.response.TotalDebt;
 import org.asupg.asupgservice.repository.custom.CompanyRepositoryCustom;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
-
-import java.math.BigDecimal;
 
 @Repository
 public interface CompanyRepository extends MongoRepository<CompanyDTO, String>, CompanyRepositoryCustom {

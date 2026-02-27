@@ -6,7 +6,6 @@ import org.asupg.asupgservice.model.request.CompanySearchRequest;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
 import org.asupg.asupgservice.model.response.CompanySearchResponse;
-import org.asupg.asupgservice.model.response.TotalDebt;
 import org.asupg.asupgservice.repository.CompanyRepository;
 import org.asupg.asupgservice.repository.DeviceRepository;
 import org.asupg.asupgservice.repository.TransactionRepository;
@@ -199,11 +198,4 @@ public class CompanyService {
         return new CompanySearchResponse(page.getItems(), page.getNextCursor());
     }
 
-    public BigDecimal getCompaniesTotalDebt() {
-        return companyRepository.getTotalNegativeBalance().getResult();
-    }
-
-    public BigDecimal getCompaniesTotalBalance() {
-        return companyRepository.getTotalBalance().getResult();
-    }
 }

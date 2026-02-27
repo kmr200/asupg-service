@@ -21,6 +21,6 @@ public interface WorkersClient {
     ResponseEntity<Void> runReportIngest(
             @RequestParam LocalDate from,
             @RequestParam LocalDate to
-            );
+    );
 
 }

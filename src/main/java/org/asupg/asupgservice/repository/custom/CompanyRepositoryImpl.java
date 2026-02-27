@@ -2,24 +2,26 @@ package org.asupg.asupgservice.repository.custom;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.asupg.asupgservice.model.CompanyDTO;
-import org.asupg.asupgservice.model.CompanyStatus;
-import org.asupg.asupgservice.model.MongoPageResponse;
-import org.asupg.asupgservice.model.SortOrder;
+import org.asupg.asupgservice.model.*;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
 import org.asupg.asupgservice.util.PaginationUtil;
 import org.bson.types.Decimal128;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 @Slf4j
 @Repository
@@ -46,7 +48,6 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
         Query query = new Query();
         Map<String, Criteria> criteriaMap = new HashMap<>();
 
-        // currentBalance < 0 is the base condition
         Criteria balanceCriteria = Criteria.where(CURRENT_BALANCE_FIELD).lt(Decimal128.parse(BigDecimal.ZERO.toPlainString()));
         if (minBalance != null) balanceCriteria = balanceCriteria.gte(Decimal128.parse(minBalance.toPlainString()));
         if (maxBalance != null) balanceCriteria = balanceCriteria.lt(Decimal128.parse(maxBalance.toPlainString()));
@@ -54,24 +55,14 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
 
         criteriaMap.values().forEach(query::addCriteria);
 
-        if (search != null && !search.isBlank()) {
-            String escapedSearch = Pattern.quote(search.trim());
-            Pattern searchPattern = Pattern.compile(escapedSearch, Pattern.CASE_INSENSITIVE);
-            query.addCriteria(new Criteria().orOperator(
-                    Criteria.where(INN_FIELD).regex(searchPattern),
-                    Criteria.where(NAME_FIELD).regex(searchPattern)
-            ));
-        }
-
-        Sort.Direction direction =
-                sortOrder == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
+        List<Criteria> logicalCriteria = new ArrayList<>();
+        applySearchCriteria(search, logicalCriteria);
 
         CompanySearchRequest.SortBy sortBy = CompanySearchRequest.SortBy.CURRENT_BALANCE;
+        Sort.Direction direction = sortOrder == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        query.with(Sort.by(direction, sortBy.getValue(), "_id"));
-        query.limit(limit + 1);
-
-        paginationUtil.applyCursor(query, cursor, sortBy, direction);
+        paginationUtil.applySorting(query, sortBy.getValue(), direction, limit);
+        paginationUtil.applyLogicalCriteria(query, logicalCriteria, cursor, sortBy, direction);
 
         List<CompanyDTO> results = mongoTemplate.find(query, CompanyDTO.class);
         return paginationUtil.buildPage(results, limit, sortBy, CompanyDTO::getInn);
@@ -91,28 +82,13 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
         Query query = new Query();
         Map<String, Criteria> criteriaMap = new HashMap<>();
 
-        // Balance range
         Criteria balanceCriteria = new Criteria(CURRENT_BALANCE_FIELD);
         if (minBalance != null) balanceCriteria = balanceCriteria.gte(Decimal128.parse(minBalance.toPlainString()));
         if (maxBalance != null) balanceCriteria = balanceCriteria.lte(Decimal128.parse(maxBalance.toPlainString()));
         if (minBalance != null || maxBalance != null) criteriaMap.put(CURRENT_BALANCE_FIELD, balanceCriteria);
+        if (status != null) criteriaMap.put(STATUS_FIELD, Criteria.where(STATUS_FIELD).is(status));
 
-        if (status != null) {
-            criteriaMap.put(STATUS_FIELD, Criteria.where(STATUS_FIELD).is(status));
-        }
-
-        if (search != null && !search.isBlank()) {
-            String escapedSearch = Pattern.quote(search.trim());
-            Pattern searchPattern = Pattern.compile(escapedSearch, Pattern.CASE_INSENSITIVE);
-            query.addCriteria(new Criteria().orOperator(
-                    Criteria.where(INN_FIELD).regex(searchPattern),
-                    Criteria.where(NAME_FIELD).regex(searchPattern)
-            ));
-        }
-
-        CompanySearchRequest.SortBy effectiveSortBy =
-                sortBy != null ? sortBy : CompanySearchRequest.SortBy.NAME;
-
+        CompanySearchRequest.SortBy effectiveSortBy = sortBy != null ? sortBy : CompanySearchRequest.SortBy.NAME;
         String sortField = effectiveSortBy.getValue();
 
         if (criteriaMap.containsKey(sortField)) {
@@ -123,16 +99,59 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
 
         criteriaMap.values().forEach(query::addCriteria);
 
-        Sort.Direction direction =
-                sortOrder == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
+        List<Criteria> logicalCriteria = new ArrayList<>();
+        applySearchCriteria(search, logicalCriteria);
 
-        query.with(Sort.by(direction, sortField, "_id"));
-        query.limit(limit + 1);
+        Sort.Direction direction = sortOrder == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        paginationUtil.applyCursor(query, cursor, effectiveSortBy, direction);
+        paginationUtil.applySorting(query, sortField, direction, limit);
+        paginationUtil.applyLogicalCriteria(query, logicalCriteria, cursor, effectiveSortBy, direction);
 
         List<CompanyDTO> results = mongoTemplate.find(query, CompanyDTO.class);
         return paginationUtil.buildPage(results, limit, effectiveSortBy, CompanyDTO::getInn);
+    }
+
+    @Override
+    public CompanyDashboardResult getCompanyDashboardAggregation() {
+        Aggregation aggregation = Aggregation.newAggregation(
+                facet()
+                        .and(
+                                match(Criteria.where(CURRENT_BALANCE_FIELD).lt(Decimal128.POSITIVE_ZERO)),
+                                group().sum(CURRENT_BALANCE_FIELD).as("result")
+                        ).as("totalDebt")
+                        .and(
+                                group().sum(CURRENT_BALANCE_FIELD).as("result")
+                        ).as("totalBalance")
+                        .and(
+                                match(Criteria.where(CURRENT_BALANCE_FIELD).lt(Decimal128.POSITIVE_ZERO)),
+                                sort(Sort.Direction.ASC, CURRENT_BALANCE_FIELD),
+                                limit(10),
+                                project(INN_FIELD, NAME_FIELD, CURRENT_BALANCE_FIELD).andExclude("_id")
+                        ).as("topDebtors")
+                        .and(
+                                group()
+                                        .count().as("totalCompanies")
+                                        .sum(ConditionalOperators
+                                                .when(Criteria.where(STATUS_FIELD).is(CompanyStatus.ACTIVE))
+                                                .then(1).otherwise(0)).as("activeCompanies")
+                                        .sum(ConditionalOperators
+                                                .when(Criteria.where(STATUS_FIELD).is(CompanyStatus.INACTIVE))
+                                                .then(1).otherwise(0)).as("inactiveCompanies")
+                                        .sum("deviceCount").as("totalDevices")
+                        ).as("companySummary")
+        );
+
+        return mongoTemplate.aggregate(aggregation, CompanyDTO.class, CompanyDashboardResult.class)
+                .getUniqueMappedResult();
+    }
+
+    private void applySearchCriteria(String search, List<Criteria> logicalCriteria) {
+        if (search == null || search.isBlank()) return;
+        Pattern searchPattern = Pattern.compile(Pattern.quote(search.trim()), Pattern.CASE_INSENSITIVE);
+        logicalCriteria.add(new Criteria().orOperator(
+                Criteria.where(INN_FIELD).regex(searchPattern),
+                Criteria.where(NAME_FIELD).regex(searchPattern)
+        ));
     }
 
 }

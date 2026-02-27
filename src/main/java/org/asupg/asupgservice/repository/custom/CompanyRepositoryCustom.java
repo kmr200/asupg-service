@@ -1,9 +1,6 @@
 package org.asupg.asupgservice.repository.custom;
 
-import org.asupg.asupgservice.model.CompanyDTO;
-import org.asupg.asupgservice.model.CompanyStatus;
-import org.asupg.asupgservice.model.MongoPageResponse;
-import org.asupg.asupgservice.model.SortOrder;
+import org.asupg.asupgservice.model.*;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
 
 import java.math.BigDecimal;
@@ -29,4 +26,6 @@ public interface CompanyRepositoryCustom {
             SortOrder sortOrder,
             String search
     );
+
+    CompanyDashboardResult getCompanyDashboardAggregation();
 }

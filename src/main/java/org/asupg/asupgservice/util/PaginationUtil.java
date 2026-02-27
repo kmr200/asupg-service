@@ -7,14 +7,12 @@ import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.CursorPayload;
 import org.asupg.asupgservice.model.MongoPageResponse;
 import org.asupg.asupgservice.model.request.SortableField;
-import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.function.Function;
@@ -25,13 +23,13 @@ public class PaginationUtil {
 
     private final ObjectMapper objectMapper;
 
-    public <T> void applyCursor(
+    public <T> Criteria buildCursorCriteria(
             Query query,
             String cursor,
             SortableField<T> sortBy,
             Sort.Direction direction
     ) {
-        if (cursor == null || cursor.isBlank()) return;
+        if (cursor == null || cursor.isBlank()) return null;
 
         CursorPayload payload = decodeCursor(cursor);
 
@@ -53,21 +51,7 @@ public class PaginationUtil {
                         : Criteria.where("_id").lt(id)
         );
 
-        // Instead of adding orOperator directly (null key collision),
-        // append to existing query criteria using $and
-        Document existingCriteriaObject = query.getQueryObject();
-        Document cursorDoc = new Criteria().orOperator(cursorCriteria, tieBreaker)
-                .getCriteriaObject();
-
-        // Merge using $and
-        List<Document> andClauses = new ArrayList<>();
-        andClauses.add(existingCriteriaObject);
-        andClauses.add(cursorDoc);
-
-        Query newQuery = new Query(new Criteria("$and").is(andClauses));
-        // copy sort and limit back
-        query.getQueryObject().clear();
-        query.getQueryObject().putAll(new Document("$and", andClauses));
+        return new Criteria().orOperator(cursorCriteria, tieBreaker);
     }
 
     public <T> MongoPageResponse<T> buildPage(
@@ -87,6 +71,25 @@ public class PaginationUtil {
         }
 
         return new MongoPageResponse<>(results, nextCursor);
+    }
+
+    public void applyLogicalCriteria(
+            Query query,
+            List<Criteria> logicalCriteria,
+            String cursor,
+            SortableField<?> sortBy,
+            Sort.Direction direction
+    ) {
+        Criteria cursorCriteria = buildCursorCriteria(query, cursor, sortBy, direction);
+        if (cursorCriteria != null) logicalCriteria.add(cursorCriteria);
+        if (!logicalCriteria.isEmpty()) {
+            query.addCriteria(new Criteria().andOperator(logicalCriteria));
+        }
+    }
+
+    public void applySorting(Query query, String sortField, Sort.Direction direction, int limit) {
+        query.with(Sort.by(direction, sortField, "_id"));
+        query.limit(limit + 1);
     }
 
     private <T> String encodeCursor(
@@ -111,4 +114,5 @@ public class PaginationUtil {
             throw new AppException(400, "Validation failed", "Invalid cursor");
         }
     }
+
 }

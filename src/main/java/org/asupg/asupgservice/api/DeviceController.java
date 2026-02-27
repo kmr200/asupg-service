@@ -55,7 +55,7 @@ public interface DeviceController {
                     )
             )
     })
-   ResponseEntity<DeviceDTO> getDevice(String id);
+    ResponseEntity<DeviceDTO> getDevice(String id);
 
     @Operation(summary = "Create device", description = "Creates a device", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({

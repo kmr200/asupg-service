@@ -2,9 +2,7 @@ package org.asupg.asupgservice.api.impl;
 
 import org.asupg.asupgservice.api.TransactionController;
 import org.asupg.asupgservice.model.TransactionDTO;
-import org.asupg.asupgservice.model.request.CompanySearchRequest;
 import org.asupg.asupgservice.model.request.TransactionSearchRequest;
-import org.asupg.asupgservice.model.response.CompanySearchResponse;
 import org.asupg.asupgservice.model.response.TransactionSearchResponse;
 import org.asupg.asupgservice.service.TransactionService;
 import org.springframework.http.HttpStatus;
