@@ -7,13 +7,13 @@ import lombok.Data;
 @Schema(description = "Bank API configuration")
 public class BankConfigResponse {
 
-    @Schema(description = "Bank API host URL", example = "https://mb.ipakyulibank.uz:2713")
+    @Schema(description = "Bank API host URL", example = "https://host:port")
     private String host;
 
-    @Schema(description = "20-digit account number used for transactions", example = "20208000012345678001")
+    @Schema(description = "20-digit account number used for transactions", example = "12345678901234567890")
     private String account;
 
-    @Schema(description = "5-digit branch MFO code", example = "00444")
+    @Schema(description = "5-digit branch MFO code", example = "12345")
     private String branch;
 
 }
