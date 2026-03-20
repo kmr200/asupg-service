@@ -1,6 +1,10 @@
 spring:
   application:
     name: asupg-service
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
   data:
     mongodb:
       host: ${mongodb.host}

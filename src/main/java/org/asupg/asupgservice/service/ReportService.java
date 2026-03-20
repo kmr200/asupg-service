@@ -1,5 +1,8 @@
 package org.asupg.asupgservice.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.asupg.asupgservice.client.WorkersClient;
+import org.asupg.asupgservice.client.model.response.AccountResponse;
 import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.AggregationResult;
 import org.asupg.asupgservice.model.CompanyDashboardResult;
@@ -9,13 +12,17 @@ import org.asupg.asupgservice.repository.CompanyRepository;
 import org.asupg.asupgservice.repository.DeviceRepository;
 import org.asupg.asupgservice.repository.TransactionRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 
+@Slf4j
 @Service
 public class ReportService {
 
@@ -23,17 +30,19 @@ public class ReportService {
     private final DeviceRepository deviceRepository;
     private final CompanyRepository companyRepository;
     private final TransactionRepository transactionRepository;
+    private final WorkersClient workersClient;
 
     public ReportService(
             @Qualifier("dashboardExecutor") Executor dashboardExecutor,
             DeviceRepository deviceRepository,
             CompanyRepository companyRepository,
-            TransactionRepository transactionRepository
-    ) {
+            TransactionRepository transactionRepository,
+            WorkersClient workersClient) {
         this.dashboardExecutor = dashboardExecutor;
         this.deviceRepository = deviceRepository;
         this.companyRepository = companyRepository;
         this.transactionRepository = transactionRepository;
+        this.workersClient = workersClient;
     }
 
     public DashboardResponse getDashboard() {
@@ -44,9 +53,19 @@ public class ReportService {
                 CompletableFuture.supplyAsync(transactionRepository::getTransactionDashboardAggregation, dashboardExecutor);
         CompletableFuture<AggregationResult> deviceFuture =
                 CompletableFuture.supplyAsync(deviceRepository::getTotalDevices, dashboardExecutor);
+        CompletableFuture<List<AccountResponse>> accountsFuture =
+                CompletableFuture.supplyAsync(
+                                () -> {
+                                    ResponseEntity<List<AccountResponse>> response = workersClient.getBankAccounts();
+                                    return response.getBody();
+                                }, dashboardExecutor)
+                        .exceptionally(ex -> {
+                            log.warn("Failed to fetch bank accounts for dashboard: {}", ex.getMessage());
+                            return Collections.emptyList();
+                        });
 
         try {
-            CompletableFuture.allOf(companyFuture, transactionFuture, deviceFuture).join();
+            CompletableFuture.allOf(companyFuture, transactionFuture, deviceFuture, accountsFuture).join();
         } catch (CompletionException e) {
             throw new AppException(500, "Dashboard aggregation failed", e.getCause().getMessage());
         }
@@ -54,7 +73,8 @@ public class ReportService {
         return new DashboardResponse(
                 transactionFuture.join(),
                 companyFuture.join(),
-                deviceFuture.join().getResult()
+                deviceFuture.join().getResult(),
+                accountsFuture.join()
         );
 
     }
