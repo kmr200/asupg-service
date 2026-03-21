@@ -69,6 +69,10 @@ public class TransactionService {
         TransactionDTO transaction = getTransactionById(id);
         String oldCompanyInn = transaction.getCounterpartyInn();
 
+        if (companyInn.equals(oldCompanyInn)) {
+            throw new AppException(400, "Ошибка валидации", "Транзакция уже привязана к компании с ИНН: " + companyInn);
+        }
+
         CompanyDTO newCompany = getCompany(companyInn);
 
         // Subtract from old company if previously assigned
