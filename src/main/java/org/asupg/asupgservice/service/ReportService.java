@@ -69,7 +69,7 @@ public class ReportService {
         try {
             CompletableFuture.allOf(companyFuture, transactionFuture, deviceFuture, bankStatusFuture).join();
         } catch (CompletionException e) {
-            throw new AppException(500, "Dashboard aggregation failed", e.getCause().getMessage());
+            throw new AppException(500, "Ошибка агрегации дашборда", e.getCause().getMessage());
         }
 
         return new DashboardResponse(

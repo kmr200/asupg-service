@@ -42,7 +42,7 @@ public class CompanyService {
     public CompanyDTO getCompany(String id) {
         logger.debug("Get company with id {}", id);
         return companyRepository.findById(id).orElseThrow(
-                () -> new AppException(404, "Validation failed", "Company with id: " + id + " not found")
+                () -> new AppException(404, "Ресурс не найден", "Компания с id: " + id + " не найдена")
         );
     }
 
@@ -56,7 +56,7 @@ public class CompanyService {
 
         if (companyRepository.existsById(inn)) {
             logger.warn("Company with id {} already exists", inn);
-            throw new AppException(409, "Validation failed", "Company with id: " + inn + " already exists");
+            throw new AppException(409, "Конфликт", "Компания с id: " + inn + " уже зарегистрирована");
         }
 
         CompanyDTO companyDTO = new CompanyDTO(
@@ -71,7 +71,7 @@ public class CompanyService {
             return companyRepository.insert(companyDTO);
         } catch (DuplicateKeyException e) {
             logger.info("Company with id {} already exists", inn);
-            throw new AppException(409, "Conflict", "Company with id: " + inn + " already exists");
+            throw new AppException(409, "Конфликт", "Компания с id: " + inn + " уже зарегистрирована");
         }
     }
 
@@ -79,7 +79,7 @@ public class CompanyService {
         logger.debug("Get company balance with id {}", id);
 
         CompanyDTO company = companyRepository.findById(id).orElseThrow(
-                () -> new AppException(404, "Validation failed", "Company with id: " + id + " not found")
+                () -> new AppException(404, "Ошибка валидации", "Компания с id: " + id + " не найдена")
         );
 
         List<TransactionDTO> monthlyChargeTransactions = transactionRepository.findAllByCounterpartyInnAndTransactionType(

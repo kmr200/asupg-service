@@ -32,7 +32,7 @@ public class DeviceService {
 
     public DeviceDTO getDevice(String deviceId) {
         return deviceRepository.findById(deviceId).orElseThrow(
-                () -> new AppException(404, "Validation failed", "Device with id: " + deviceId + " not found")
+                () -> new AppException(404, "Ошибка валидации", "Устройство с id: " + deviceId + " не найдено")
         );
     }
 
@@ -49,7 +49,7 @@ public class DeviceService {
 
         if (!companyRepository.existsById(companyInn)) {
             log.error("Company specified during device creation does not exist");
-            throw new AppException(400, "Validation failed", "Company with INN: " + companyInn + " does not exist");
+            throw new AppException(400, "Ошибка валидации", "Компания с ИНН: " + companyInn + " не существует");
         }
 
         DeviceDTO deviceDTO = new DeviceDTO(
@@ -68,7 +68,7 @@ public class DeviceService {
             return deviceRepository.insert(deviceDTO);
         } catch (DuplicateKeyException e) {
             log.info("Device with id {} already exists", deviceId);
-            throw new AppException(409, "Conflict", "Device with id: " + deviceId + " already exists");
+            throw new AppException(409, "Конфликт", "Устройство с id: " + deviceId + " уже зарегистрировано");
         }
     }
 

@@ -30,7 +30,7 @@ public class AuthService {
 
         if (userRepository.existsById(username)) {
             log.warn("User with username {} already exists", username);
-            throw new AppException(409, "Validation failed", "User with username: " + username + " already exists");
+            throw new AppException(409, "Конфликт", "Пользователь с именем: " + username + " уже зарегистрирован");
         }
 
         UserDTO user = new UserDTO(
@@ -58,7 +58,7 @@ public class AuthService {
 
     public UserDTO getUser(String username) {
         return userRepository.findById(username).orElseThrow(
-                () -> new AppException(404, "Validation failed", "User with username: " + username + " not found")
+                () -> new AppException(404, "Ошибка валидации", "Пользователь с именем: " + username + " не найден")
         );
     }
 
