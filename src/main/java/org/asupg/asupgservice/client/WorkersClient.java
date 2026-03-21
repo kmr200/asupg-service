@@ -1,14 +1,13 @@
 package org.asupg.asupgservice.client;
 
 import org.asupg.asupgservice.client.model.request.BankConfigUpdateRequest;
-import org.asupg.asupgservice.client.model.response.AccountResponse;
 import org.asupg.asupgservice.client.model.response.BankConfigResponse;
+import org.asupg.asupgservice.client.model.response.BankStatusResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @FeignClient(
         name = "job-service",
@@ -26,8 +25,8 @@ public interface WorkersClient {
     );
 
     // Bank accounts
-    @GetMapping("/v1/bank/accounts")
-    ResponseEntity<List<AccountResponse>> getBankAccounts();
+    @GetMapping("/v1/bank/status")
+    ResponseEntity<BankStatusResponse> getBankStatus();
 
     // Bank config
     @GetMapping("/v1/bank-config")

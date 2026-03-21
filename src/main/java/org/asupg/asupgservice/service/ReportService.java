@@ -2,7 +2,7 @@ package org.asupg.asupgservice.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.asupg.asupgservice.client.WorkersClient;
-import org.asupg.asupgservice.client.model.response.AccountResponse;
+import org.asupg.asupgservice.client.model.response.BankStatusResponse;
 import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.AggregationResult;
 import org.asupg.asupgservice.model.CompanyDashboardResult;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -53,19 +52,22 @@ public class ReportService {
                 CompletableFuture.supplyAsync(transactionRepository::getTransactionDashboardAggregation, dashboardExecutor);
         CompletableFuture<AggregationResult> deviceFuture =
                 CompletableFuture.supplyAsync(deviceRepository::getTotalDevices, dashboardExecutor);
-        CompletableFuture<List<AccountResponse>> accountsFuture =
+        CompletableFuture<BankStatusResponse> bankStatusFuture =
                 CompletableFuture.supplyAsync(
                                 () -> {
-                                    ResponseEntity<List<AccountResponse>> response = workersClient.getBankAccounts();
+                                    ResponseEntity<BankStatusResponse> response = workersClient.getBankStatus();
                                     return response.getBody();
                                 }, dashboardExecutor)
                         .exceptionally(ex -> {
-                            log.warn("Failed to fetch bank accounts for dashboard: {}", ex.getMessage());
-                            return Collections.emptyList();
+                            log.warn("Failed to fetch bank status for dashboard: {}", ex.getMessage());
+                            return BankStatusResponse.builder()
+                                    .locked(false)
+                                    .accounts(Collections.emptyList())
+                                    .build();
                         });
 
         try {
-            CompletableFuture.allOf(companyFuture, transactionFuture, deviceFuture, accountsFuture).join();
+            CompletableFuture.allOf(companyFuture, transactionFuture, deviceFuture, bankStatusFuture).join();
         } catch (CompletionException e) {
             throw new AppException(500, "Dashboard aggregation failed", e.getCause().getMessage());
         }
@@ -74,9 +76,8 @@ public class ReportService {
                 transactionFuture.join(),
                 companyFuture.join(),
                 deviceFuture.join().getResult(),
-                accountsFuture.join()
+                bankStatusFuture.join()
         );
-
     }
 
     public BigDecimal getCompaniesTotalDebt() {

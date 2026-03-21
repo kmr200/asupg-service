@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.asupg.asupgservice.client.model.response.AccountResponse;
+import org.asupg.asupgservice.client.model.response.BankStatusResponse;
 import org.asupg.asupgservice.model.CompanyDashboardResult;
 import org.asupg.asupgservice.model.TransactionDashboardResult;
 
@@ -35,14 +35,14 @@ public class DashboardResponse {
     @Schema(description = "Monthly trend of charges and payments over the last 6 months, ordered chronologically")
     List<TransactionDashboardResult.MonthlyTrend> monthlyTrend;
 
-    @Schema(description = "Accounts connected to bank account")
-    List<AccountResponse> accounts;
+    @Schema(description = "Bank API status including lock state and connected accounts")
+    BankStatusResponse bankStatus;
 
     public DashboardResponse(
             TransactionDashboardResult transactionDashboardResult,
             CompanyDashboardResult companyDashboardResult,
             BigDecimal totalDevices,
-            List<AccountResponse> accounts
+            BankStatusResponse bankStatus
     ) {
         totalDebt = companyDashboardResult.getTotalDebt().isEmpty() ?
                 BigDecimal.ZERO : companyDashboardResult.getTotalDebt().getFirst().getResult();
@@ -55,7 +55,6 @@ public class DashboardResponse {
         reconciliationBreakdown = transactionDashboardResult.getReconciliationBreakdown();
         monthlyTrend = transactionDashboardResult.getMonthlyTrend();
         companySummary.setTotalDevices(totalDevices.intValue());
-        this.accounts = accounts;
+        this.bankStatus = bankStatus;
     }
-
 }
