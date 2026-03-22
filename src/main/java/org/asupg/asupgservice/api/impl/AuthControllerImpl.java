@@ -11,6 +11,7 @@ import org.asupg.asupgservice.model.request.UpdateUserRequest;
 import org.asupg.asupgservice.model.response.LoginResponse;
 import org.asupg.asupgservice.service.AuthService;
 import org.asupg.asupgservice.service.JwtService;
+import org.asupg.asupgservice.service.LoginAttemptService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,16 +33,26 @@ import java.util.List;
 public class AuthControllerImpl implements AuthController {
 
     private final JwtService jwtService;
-    @Value("${security.jwt.expireInMinutes:15}")
-    private int expireInMinutes;
-
+    private final LoginAttemptService loginAttemptService;
     private final AuthenticationManager authenticationManager;
     private final AuthService authService;
+
+    @Value("${security.jwt.expireInMinutes:15}")
+    private int expireInMinutes;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @Validated @RequestBody LoginRequest loginRequest
     ) {
+        String username = loginRequest.getUsername();
+
+        if (loginAttemptService.isBlocked(username)) {
+            throw new AppException(429, "Too Many Requests",
+                    "Аккаунт заблокирован из-за превышения количества попыток входа. Попробуйте снова через "
+                            + loginAttemptService.lockDurationMinutes
+                            + " минут.");
+        }
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -50,6 +61,7 @@ public class AuthControllerImpl implements AuthController {
                     )
             );
 
+            loginAttemptService.recordSuccess(loginRequest.getUsername());
             String token = jwtService.generateToken(authentication);
 
             LoginResponse loginResponse = new LoginResponse(
@@ -60,8 +72,14 @@ public class AuthControllerImpl implements AuthController {
 
             return new ResponseEntity<>(loginResponse, HttpStatus.OK);
         } catch (BadCredentialsException e) {
-            log.debug("Failed login attempt for user: {}", loginRequest.getUsername());
-            throw new AppException(401, "Unauthorized", "Invalid username or password");
+            loginAttemptService.recordFailure(username);
+            int remaining = loginAttemptService.getRemainingAttempts(username);
+            log.debug("Failed login attempt for user: {}, remaining attempts: {}", username, remaining);
+            throw new AppException(401, "Unauthorized",
+                    remaining > 0
+                            ? "Неверный логин или пароль. Осталось попыток: " + remaining
+                            : "Аккаунт заблокирован. Попробуйте снова через 15 минут."
+            );
         } catch (AuthenticationException e) {
             log.debug("Authentication exception: {}", e.getMessage());
             throw new AppException(401, "Unauthorized", "Authentication Failed");
