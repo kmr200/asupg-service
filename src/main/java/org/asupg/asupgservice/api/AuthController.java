@@ -57,6 +57,20 @@ public interface AuthController {
                                     }
                                     """)
                     )
+            ),
+            @ApiResponse(responseCode = "429", description = "Too many failed login attempts — account temporarily locked",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                {
+                                    "timestamp": "timestamp",
+                                    "status": 429,
+                                    "error": "Too Many Requests",
+                                    "message": "Аккаунт заблокирован из-за превышения количества попыток входа. Попробуйте снова через 15 минут.",
+                                    "path": "/api/asupg-service/v1/auth/login"
+                                }
+                                """)
+                    )
             )
     })
     ResponseEntity<LoginResponse> login(LoginRequest loginRequest);
