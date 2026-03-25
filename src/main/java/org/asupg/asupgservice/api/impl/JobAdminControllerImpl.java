@@ -48,24 +48,28 @@ public class JobAdminControllerImpl implements JobAdminController {
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @GetMapping("/config")
     public ResponseEntity<BankConfigResponse> getBankConfig() {
-        return workersClient.getBankConfig();
+        ResponseEntity<BankConfigResponse> response = workersClient.getBankConfig();
+        return ResponseEntity.ok(response.getBody());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/config")
     public ResponseEntity<BankConfigResponse> updateBankConfig(@RequestBody BankConfigUpdateRequest request) {
-        return workersClient.updateBankConfig(request);
+        ResponseEntity<BankConfigResponse> response = workersClient.updateBankConfig(request);
+        return ResponseEntity.ok(response.getBody());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/config/password")
     public ResponseEntity<String> getBankPassword() {
-        return workersClient.getBankPassword();
+        ResponseEntity<String> response = workersClient.getBankPassword();
+        return ResponseEntity.ok(response.getBody());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/config/username")
     public ResponseEntity<String> getBankUsername() {
-        return workersClient.getBankUsername();
+        ResponseEntity<String> response = workersClient.getBankUsername();
+        return ResponseEntity.ok(response.getBody());
     }
 }
