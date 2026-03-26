@@ -62,5 +62,5 @@ security:
 info:
   app:
     name: asupg-service
-    version: 1.4.7
+    version: 1.4.8
     description: ASUPG backend service

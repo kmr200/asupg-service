@@ -26,7 +26,7 @@ public class TransactionDashboardResult {
         String status;
 
         @Schema(description = "Number of transactions with this status", example = "9353")
-        Integer count;
+        Long count;
 
         @Schema(description = "Total transaction amount for this status", example = "7184171463.47")
         Decimal128 totalAmount;
@@ -44,7 +44,7 @@ public class TransactionDashboardResult {
         Decimal128 totalCharged;
 
         @Schema(description = "Total amount paid (BANK_PAYMENT transactions)", example = "980000000.00")
-        Integer totalPaid;
+        Long totalPaid;
     }
 
 }
