@@ -49,6 +49,7 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
             BigDecimal maxAmount,
             TransactionDTO.TransactionType transactionType,
             ReconciliationStatus reconciliationStatus,
+            String counterpartyInn,
             Integer limit,
             String cursor,
             TransactionSearchRequest.SortBy sortBy,
@@ -89,10 +90,14 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
             criteriaMap.put(RECONCILIATION_STATUS_FIELD, Criteria.where(RECONCILIATION_STATUS_FIELD).is(reconciliationStatus));
         }
 
+        if (counterpartyInn != null) {
+            criteriaMap.put(COUNTERPARTY_INN_FIELD, Criteria.where(COUNTERPARTY_INN_FIELD).is(counterpartyInn));
+        }
+
         // Collect logical criteria to avoid null criteria collisions
         List<Criteria> logicalCriteria = new ArrayList<>();
 
-        applySearchCriteria(search, logicalCriteria);
+        applySearchCriteria(search, logicalCriteria, counterpartyInn);
 
         criteriaMap.merge(sortField, Criteria.where(sortField).ne(null),
                 (existing, update) -> existing.ne(null));
@@ -139,14 +144,20 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
                 .getUniqueMappedResult();
     }
 
-    private void applySearchCriteria(String search, List<Criteria> logicalCriteria) {
+    private void applySearchCriteria(String search, List<Criteria> logicalCriteria, String counterpartyInn) {
         if (search == null || search.isBlank()) return;
         Pattern searchPattern = Pattern.compile(Pattern.quote(search.trim()), Pattern.CASE_INSENSITIVE);
-        logicalCriteria.add(new Criteria().orOperator(
-                Criteria.where(COUNTERPARTY_INN_FIELD).regex(searchPattern),
-                Criteria.where(DESCRIPTION_FIELD).regex(searchPattern),
-                Criteria.where(COUNTERPARTY_NAME).regex(searchPattern)
-        ));
+
+        List<Criteria> orCriteria = new ArrayList<>();
+
+        if (counterpartyInn == null) {
+            orCriteria.add(Criteria.where(COUNTERPARTY_INN_FIELD).regex(searchPattern));
+        }
+
+        orCriteria.add(Criteria.where(DESCRIPTION_FIELD).regex(searchPattern));
+        orCriteria.add(Criteria.where(COUNTERPARTY_NAME).regex(searchPattern));
+
+        logicalCriteria.add(new Criteria().orOperator(orCriteria.toArray(new Criteria[0])));
     }
 
 }

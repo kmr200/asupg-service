@@ -46,7 +46,7 @@ public class CompanyService {
         );
     }
 
-    public CompanyDTO createCompany(
+    public CompanyDTO createCompany (
             String inn,
             String name,
             String email,

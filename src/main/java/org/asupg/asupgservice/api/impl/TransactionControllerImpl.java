@@ -43,6 +43,7 @@ public class TransactionControllerImpl implements TransactionController {
                 transactionSearchRequest.getMaxAmount(),
                 transactionSearchRequest.getTransactionType(),
                 transactionSearchRequest.getReconciliationStatus(),
+                transactionSearchRequest.getInn(),
                 transactionSearchRequest.getLimit(),
                 transactionSearchRequest.getCursor(),
                 transactionSearchRequest.getSortBy(),

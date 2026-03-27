@@ -44,6 +44,9 @@ public class TransactionSearchRequest {
     @Schema(description = "Reconciliation status of a transaction", example = "NOT_FOUND", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     ReconciliationStatus reconciliationStatus;
 
+    @Schema(description = "Inn of the company", example = "123456789", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    String inn;
+
     @Min(1)
     @Max(100)
     @JsonProperty(defaultValue = "10")

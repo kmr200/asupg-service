@@ -9,6 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.asupg.asupgservice.validation.ValidationDoc;
 
+import java.math.BigDecimal;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -33,5 +35,7 @@ public class CreateCompanyRequest {
 
     @Schema(description = "Phone contact point of the company", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String phone;
+
+    private BigDecimal balance;
 
 }

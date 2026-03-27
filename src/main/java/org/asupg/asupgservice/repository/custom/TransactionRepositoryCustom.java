@@ -15,6 +15,7 @@ public interface TransactionRepositoryCustom {
             BigDecimal maxAmount,
             TransactionDTO.TransactionType transactionType,
             ReconciliationStatus reconciliationStatus,
+            String counterpartyInn,
             Integer limit,
             String cursor,
             TransactionSearchRequest.SortBy sortBy,
