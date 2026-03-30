@@ -120,6 +120,7 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
                                 group().sum(CURRENT_BALANCE_FIELD).as("result")
                         ).as("totalDebt")
                         .and(
+                                match(Criteria.where(CURRENT_BALANCE_FIELD).gt(Decimal128.POSITIVE_ZERO)),
                                 group().sum(CURRENT_BALANCE_FIELD).as("result")
                         ).as("totalBalance")
                         .and(
