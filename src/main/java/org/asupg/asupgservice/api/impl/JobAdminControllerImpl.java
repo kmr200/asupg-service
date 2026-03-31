@@ -2,9 +2,12 @@ package org.asupg.asupgservice.api.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.asupg.asupgservice.api.JobAdminController;
-import org.asupg.asupgservice.client.WorkersClient;
-import org.asupg.asupgservice.client.model.request.BankConfigUpdateRequest;
-import org.asupg.asupgservice.client.model.response.BankConfigResponse;
+import org.asupg.asupgservice.client.workers.WorkersClient;
+import org.asupg.asupgservice.client.workers.request.BankConfigUpdateRequest;
+import org.asupg.asupgservice.client.workers.response.BankConfigResponse;
+import org.asupg.asupgservice.exception.AppException;
+import org.asupg.asupgservice.model.response.DeviceSyncResponse;
+import org.asupg.asupgservice.service.DeviceService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +22,7 @@ import java.time.ZoneOffset;
 public class JobAdminControllerImpl implements JobAdminController {
 
     private final WorkersClient workersClient;
+    private final DeviceService deviceService;
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
@@ -28,6 +32,13 @@ public class JobAdminControllerImpl implements JobAdminController {
     ) {
         if (month == null) {
             month = YearMonth.now(ZoneOffset.UTC);
+        }
+
+        // Sync device status before charging users
+        DeviceSyncResponse syncResponse = deviceService.syncDevicesWithCoreAsupg();
+
+        if (syncResponse.getSyncStatus() == DeviceSyncResponse.SyncStatus.FAILED) {
+            throw new AppException(500, "Ошибка синхронизации", "Синхронизация устройств не удалась, начисление отменено");
         }
 
         workersClient.runMonthlyCharge(month.toString());
@@ -43,6 +54,14 @@ public class JobAdminControllerImpl implements JobAdminController {
     ) {
         workersClient.runReportIngest(date);
         return ResponseEntity.ok().build();
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/device-sync")
+    public ResponseEntity<DeviceSyncResponse> syncDevices() {
+        DeviceSyncResponse response = deviceService.syncDevicesWithCoreAsupg();
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")

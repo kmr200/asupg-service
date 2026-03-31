@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.asupg.asupgservice.client.model.response.BankStatusResponse;
+import org.asupg.asupgservice.client.workers.response.BankStatusResponse;
 import org.asupg.asupgservice.model.CompanyDashboardResult;
 import org.asupg.asupgservice.model.TransactionDashboardResult;
 

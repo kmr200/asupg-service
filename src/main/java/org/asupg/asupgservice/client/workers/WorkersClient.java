@@ -1,8 +1,8 @@
-package org.asupg.asupgservice.client;
+package org.asupg.asupgservice.client.workers;
 
-import org.asupg.asupgservice.client.model.request.BankConfigUpdateRequest;
-import org.asupg.asupgservice.client.model.response.BankConfigResponse;
-import org.asupg.asupgservice.client.model.response.BankStatusResponse;
+import org.asupg.asupgservice.client.workers.request.BankConfigUpdateRequest;
+import org.asupg.asupgservice.client.workers.response.BankConfigResponse;
+import org.asupg.asupgservice.client.workers.response.BankStatusResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

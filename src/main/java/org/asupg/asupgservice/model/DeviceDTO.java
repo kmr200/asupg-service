@@ -1,12 +1,14 @@
 package org.asupg.asupgservice.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -62,4 +64,30 @@ public class DeviceDTO {
     @Schema(description = "Status of the device", example = "ACTIVE")
     private DeviceStatus status;
 
+    @Version
+    @JsonIgnore
+    private Long version;
+
+    public DeviceDTO(
+            String deviceId,
+            String deviceName,
+            String companyInn,
+            String deviceType,
+            BigDecimal monthlyRate,
+            LocalDate activatedAt,
+            YearMonth freeUntil,
+            YearMonth lastBilledMonth,
+            DeviceStatus status
+    ) {
+        this.deviceId = deviceId;
+        this.deviceName = deviceName;
+        this.companyInn = companyInn;
+        this.deviceType = deviceType;
+        this.monthlyRate = monthlyRate;
+        this.activatedAt = activatedAt;
+        this.freeUntil = freeUntil;
+        this.lastBilledMonth = lastBilledMonth;
+        this.status = status;
+        this.version = 0L;
+    }
 }

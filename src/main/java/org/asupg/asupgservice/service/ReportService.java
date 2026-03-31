@@ -1,8 +1,8 @@
 package org.asupg.asupgservice.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.asupg.asupgservice.client.WorkersClient;
-import org.asupg.asupgservice.client.model.response.BankStatusResponse;
+import org.asupg.asupgservice.client.workers.WorkersClient;
+import org.asupg.asupgservice.client.workers.response.BankStatusResponse;
 import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.AggregationResult;
 import org.asupg.asupgservice.model.CompanyDashboardResult;

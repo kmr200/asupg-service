@@ -1,4 +1,4 @@
-package org.asupg.asupgservice.client;
+package org.asupg.asupgservice.client.workers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

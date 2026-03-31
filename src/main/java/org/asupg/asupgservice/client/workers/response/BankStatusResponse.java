@@ -1,4 +1,4 @@
-package org.asupg.asupgservice.client.model.response;
+package org.asupg.asupgservice.client.workers.response;
 
 import lombok.Builder;
 import lombok.Data;
