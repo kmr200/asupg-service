@@ -7,6 +7,7 @@ import org.asupg.asupgservice.client.asupg.model.response.AsupgDevice;
 import org.asupg.asupgservice.client.asupg.model.response.AsupgLoginResponse;
 import org.asupg.asupgservice.exception.AppException;
 import org.asupg.asupgservice.model.DeviceStatus;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,6 +17,12 @@ import java.util.List;
 public class AsupgCoreService {
 
     private final AsupgCoreClient asupgCoreClient;
+
+    @Value("${asupg.core.username}")
+    private String username;
+
+    @Value("${asupg.core.password}")
+    private String password;
 
     private static final String ACTIVE_STATUS_GUID = "56ce2b66-1c31-43a7-bedb-4f56b164a807";
 
@@ -29,7 +36,7 @@ public class AsupgCoreService {
     }
 
     private String retrieveToken() {
-        AsupgLoginResponse loginResponse = asupgCoreClient.login();
+        AsupgLoginResponse loginResponse = asupgCoreClient.login(username, password);
 
         if (loginResponse.getAccessToken() == null || loginResponse.getAccessToken().isBlank()) {
             throw new AppException(400, "Не удалось авторизоваться в http://asupg.uz", loginResponse.getErrorMessage());

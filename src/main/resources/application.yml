@@ -44,6 +44,10 @@ asupg:
   login-attempts:
     max-retry: 5
     lock-duration-minutes: 15
+  core:
+    host: "${ASUPG_CORE_HOST}"
+    username: "${ASUPG_CORE_USERNAME}"
+    password: "${ASUPG_CORE_PASSWORD}"
 
 security:
   jwt:
@@ -62,5 +66,5 @@ security:
 info:
   app:
     name: asupg-service
-    version: 1.6.9
+    version: 1.6.10
     description: ASUPG backend service
