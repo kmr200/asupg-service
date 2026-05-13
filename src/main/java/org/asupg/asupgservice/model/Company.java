@@ -30,7 +30,7 @@ import java.util.Objects;
         @CompoundIndex(name = "name_idx", def = "{'name': 1}"),
         @CompoundIndex(def = "{'status': 1, 'currentBalance': 1, '_id': 1}")
 })
-public class CompanyDTO {
+public class Company {
 
     @Id
     @Schema(description = "INN of the company to be created", example = "123456789")
