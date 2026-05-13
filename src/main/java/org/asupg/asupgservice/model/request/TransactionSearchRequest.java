@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.asupg.asupgservice.model.ReconciliationStatus;
 import org.asupg.asupgservice.model.SortOrder;
-import org.asupg.asupgservice.model.TransactionDTO;
+import org.asupg.asupgservice.model.Transaction;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -39,7 +39,7 @@ public class TransactionSearchRequest {
     BigDecimal maxAmount;
 
     @Schema(description = "Type of transaction", example = "MONTHLY_CHARGE", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
-    TransactionDTO.TransactionType transactionType;
+    Transaction.TransactionType transactionType;
 
     @Schema(description = "Reconciliation status of a transaction", example = "NOT_FOUND", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     ReconciliationStatus reconciliationStatus;
@@ -70,21 +70,21 @@ public class TransactionSearchRequest {
 
     @AllArgsConstructor
     @Getter
-    public enum SortBy implements SortableField<TransactionDTO> {
+    public enum SortBy implements SortableField<Transaction> {
 
         DATE(
                 "date",
-                TransactionDTO::getDate,
+                Transaction::getDate,
                 date -> LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         ),
         AMOUNT(
                 "amount",
-                TransactionDTO::getAmount,
+                Transaction::getAmount,
                 BigDecimal::new
         );
 
         private final String mongoField;
-        private final Function<TransactionDTO, Object> extractor;
+        private final Function<Transaction, Object> extractor;
         private final Function<String, Object> parser;
 
         @JsonCreator

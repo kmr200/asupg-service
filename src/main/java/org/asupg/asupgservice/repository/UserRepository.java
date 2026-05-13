@@ -1,8 +1,8 @@
 package org.asupg.asupgservice.repository;
 
-import org.asupg.asupgservice.model.UserDTO;
+import org.asupg.asupgservice.model.UserEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserRepository extends MongoRepository<UserDTO, String> {
+public interface UserRepository extends MongoRepository<UserEntity, String> {
 
 }

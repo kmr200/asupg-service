@@ -8,8 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.asupg.asupgservice.model.DeviceDTO;
+import org.asupg.asupgservice.model.Device;
 import org.asupg.asupgservice.model.request.CreateDeviceRequest;
+import org.asupg.asupgservice.model.request.DeviceUpdateRequest;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "Device endpoints")
@@ -21,7 +22,7 @@ public interface DeviceController {
                     responseCode = "200",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = DeviceDTO.class)
+                            schema = @Schema(implementation = Device.class)
                     )
             ),
             @ApiResponse(
@@ -55,7 +56,7 @@ public interface DeviceController {
                     )
             )
     })
-    ResponseEntity<DeviceDTO> getDevice(String id);
+    ResponseEntity<Device> getDevice(String id);
 
     @Operation(summary = "Create device", description = "Creates a device", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
@@ -63,7 +64,7 @@ public interface DeviceController {
                     responseCode = "201",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = DeviceDTO.class)
+                            schema = @Schema(implementation = Device.class)
                     )
             ),
             @ApiResponse(
@@ -133,6 +134,90 @@ public interface DeviceController {
                     )
             )
     })
-    ResponseEntity<DeviceDTO> createDevice(CreateDeviceRequest createDeviceRequest);
+    ResponseEntity<Device> createDevice(CreateDeviceRequest createDeviceRequest);
+
+    @Operation(summary = "Update device", description = "Updates a device by its ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Device.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 404,
+                                        "error": "Validation failed",
+                                        "message": "Device with id: 123456789 not found",
+                                        "path": "/api/asupg-service/v1/devices/123456789"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<Device> updateDevice(String id, DeviceUpdateRequest deviceUpdateRequest);
+
+    @Operation(summary = "Delete device", description = "Deletes a device by its ID", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Device.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 404,
+                                        "error": "Validation failed",
+                                        "message": "Device with id: 123456789 not found",
+                                        "path": "/api/asupg-service/v1/devices/123456789"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<Device> deleteDevice(String id);
 
 }

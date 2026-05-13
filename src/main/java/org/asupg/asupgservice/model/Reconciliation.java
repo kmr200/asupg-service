@@ -11,7 +11,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
-public class ReconciliationDTO {
+public class Reconciliation {
 
     private ReconciliationStatus status;
 
@@ -30,7 +30,7 @@ public class ReconciliationDTO {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        ReconciliationDTO that = (ReconciliationDTO) o;
+        Reconciliation that = (Reconciliation) o;
         return manual == that.manual && status == that.status && Objects.equals(processedAt, that.processedAt) && Objects.equals(failureReason, that.failureReason) && Objects.equals(updatedBy, that.updatedBy) && Objects.equals(updatedAt, that.updatedAt);
     }
 

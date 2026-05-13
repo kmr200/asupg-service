@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.YearMonth;
@@ -39,14 +40,14 @@ public class CompanyService {
         this.deviceRepository = deviceRepository;
     }
 
-    public CompanyDTO getCompany(String id) {
+    public Company getCompany(String id) {
         logger.debug("Get company with id {}", id);
         return companyRepository.findById(id).orElseThrow(
                 () -> new AppException(404, "Ресурс не найден", "Компания с id: " + id + " не найдена")
         );
     }
 
-    public CompanyDTO createCompany (
+    public Company createCompany (
             String inn,
             String name,
             String email,
@@ -59,7 +60,7 @@ public class CompanyService {
             throw new AppException(409, "Конфликт", "Компания с id: " + inn + " уже зарегистрирована");
         }
 
-        CompanyDTO companyDTO = new CompanyDTO(
+        Company company = new Company(
                 inn,
                 name,
                 CompanyStatus.ACTIVE,
@@ -68,28 +69,55 @@ public class CompanyService {
         );
 
         try {
-            return companyRepository.insert(companyDTO);
+            return companyRepository.insert(company);
         } catch (DuplicateKeyException e) {
             logger.info("Company with id {} already exists", inn);
             throw new AppException(409, "Конфликт", "Компания с id: " + inn + " уже зарегистрирована");
         }
     }
 
+    @Transactional
+    public Company updateCompany(
+            String inn,
+            String name,
+            BigDecimal currentBalance,
+            CompanyStatus status,
+            String email,
+            String phone
+    ) {
+        Company company = getCompany(inn);
+
+        if (name != null && !name.isBlank()) company.setName(name);
+        if (currentBalance != null) company.setCurrentBalance(currentBalance);
+        if (status != null) company.setStatus(status);
+        if (email != null && !email.isBlank()) company.setEmail(email);
+        if (phone != null && !phone.isBlank()) company.setPhone(phone);
+
+        return companyRepository.save(company);
+    }
+
+    public Company deleteCompany(String inn) {
+        Company company = getCompany(inn);
+        companyRepository.delete(company);
+
+        return company;
+    }
+
     public CompanyBalanceResponse getCompanyBalance(String id) {
         logger.debug("Get company balance with id {}", id);
 
-        CompanyDTO company = companyRepository.findById(id).orElseThrow(
+        Company company = companyRepository.findById(id).orElseThrow(
                 () -> new AppException(404, "Ошибка валидации", "Компания с id: " + id + " не найдена")
         );
 
-        List<TransactionDTO> monthlyChargeTransactions = transactionRepository.findAllByCounterpartyInnAndTransactionType(
+        List<Transaction> monthlyChargeTransactions = transactionRepository.findAllByCounterpartyInnAndTransactionType(
                 id,
-                TransactionDTO.TransactionType.MONTHLY_CHARGE
+                Transaction.TransactionType.MONTHLY_CHARGE
         );
 
-        List<DeviceDTO> devices = deviceRepository.findByCompanyInn(id);
+        List<Device> devices = deviceRepository.findByCompanyInn(id);
         BigDecimal monthlyCharge = devices.stream()
-                .map(DeviceDTO::getMonthlyRate)
+                .map(Device::getMonthlyRate)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -99,7 +127,7 @@ public class CompanyService {
                                 tx -> YearMonth.from(tx.getDate()),
                                 Collectors.reducing(
                                         BigDecimal.ZERO,
-                                        TransactionDTO::getAmount,
+                                        Transaction::getAmount,
                                         BigDecimal::add
                                 )
                         ));
@@ -145,7 +173,7 @@ public class CompanyService {
             SortOrder sortOrder,
             String search
     ) {
-        MongoPageResponse<CompanyDTO> page;
+        MongoPageResponse<Company> page;
 
         page = companyRepository.findCompaniesInDebt(
                 minBalance,
@@ -182,7 +210,7 @@ public class CompanyService {
             String search
     ) {
 
-        MongoPageResponse<CompanyDTO> page;
+        MongoPageResponse<Company> page;
 
         page = companyRepository.findCompanies(
                 minBalance,

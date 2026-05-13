@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.asupg.asupgservice.model.TransactionDTO;
+import org.asupg.asupgservice.model.Transaction;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class TransactionSearchResponse {
 
     @Schema(description = "List of transactions")
-    List<TransactionDTO> transactions;
+    List<Transaction> transactions;
 
     @Schema(description = "Amount of transaction in current page", example = "1")
     int count;
@@ -28,7 +28,7 @@ public class TransactionSearchResponse {
     @Schema(description = "Cursor token to retrieve next page", example = "token")
     String nextCursor;
 
-    public TransactionSearchResponse(List<TransactionDTO> transactions, String nextCursor) {
+    public TransactionSearchResponse(List<Transaction> transactions, String nextCursor) {
         this.transactions = transactions;
         this.nextCursor = nextCursor;
         this.count = transactions != null ? transactions.size() : 0;

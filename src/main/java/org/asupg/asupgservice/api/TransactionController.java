@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.asupg.asupgservice.model.TransactionDTO;
+import org.asupg.asupgservice.model.Transaction;
 import org.asupg.asupgservice.model.request.TransactionSearchRequest;
 import org.asupg.asupgservice.model.response.TransactionSearchResponse;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +25,7 @@ public interface TransactionController {
                     responseCode = "200",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = TransactionDTO.class)
+                            schema = @Schema(implementation = Transaction.class)
                     )
             ),
             @ApiResponse(
@@ -59,7 +59,7 @@ public interface TransactionController {
                     )
             )
     })
-    ResponseEntity<TransactionDTO> getTransaction(String id);
+    ResponseEntity<Transaction> getTransaction(String id);
 
     @Operation(
             summary = "Get transactions", description = "Retrieves a list of transactions with filtering and pagination", security = @SecurityRequirement(name = "bearerAuth")
@@ -172,6 +172,6 @@ public interface TransactionController {
                             """))
             )
     })
-    ResponseEntity<TransactionDTO> reassignTransaction(String id, String companyInn, String username);
+    ResponseEntity<Transaction> reassignTransaction(String id, String companyInn, String username);
 
 }

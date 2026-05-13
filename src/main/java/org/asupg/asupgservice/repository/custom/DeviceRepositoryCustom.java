@@ -1,11 +1,11 @@
 package org.asupg.asupgservice.repository.custom;
 
-import org.asupg.asupgservice.model.DeviceDTO;
+import org.asupg.asupgservice.model.Device;
 
 import java.util.List;
 
 public interface DeviceRepositoryCustom {
 
-    void updateDevices(List<DeviceDTO> devices);
+    void updateDevices(List<Device> devices);
 
 }

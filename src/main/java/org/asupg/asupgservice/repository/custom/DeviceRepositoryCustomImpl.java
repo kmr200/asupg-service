@@ -2,7 +2,7 @@ package org.asupg.asupgservice.repository.custom;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.asupg.asupgservice.model.DeviceDTO;
+import org.asupg.asupgservice.model.Device;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -18,7 +18,7 @@ public class DeviceRepositoryCustomImpl implements DeviceRepositoryCustom {
 
     private final MongoTemplate mongoTemplate;
 
-    public void updateDevices(List<DeviceDTO> devices) {
+    public void updateDevices(List<Device> devices) {
         if (devices == null || devices.isEmpty()) {
             log.info("Device list is null or empty");
             return;
@@ -27,9 +27,9 @@ public class DeviceRepositoryCustomImpl implements DeviceRepositoryCustom {
         log.info("Starting bulk replace of {} devices", devices.size());
 
         BulkOperations bulkOps =
-                mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, DeviceDTO.class);
+                mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, Device.class);
 
-        for (DeviceDTO device : devices) {
+        for (Device device : devices) {
             Query query = Query.query(Criteria.where("_id").is(device.getDeviceId()));
 
             device.setVersion(device.getVersion() != null ? device.getVersion() : 0L);

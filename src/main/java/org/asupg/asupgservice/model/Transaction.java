@@ -29,7 +29,7 @@ import java.util.Objects;
         )
 })
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TransactionDTO {
+public class Transaction {
 
     @Id
     private String transactionId;
@@ -54,7 +54,7 @@ public class TransactionDTO {
 
     private TransactionType transactionType;
 
-    private ReconciliationDTO reconciliation;
+    private Reconciliation reconciliation;
 
     @Version
     @JsonIgnore
@@ -69,7 +69,7 @@ public class TransactionDTO {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        TransactionDTO that = (TransactionDTO) o;
+        Transaction that = (Transaction) o;
         return Objects.equals(transactionId, that.transactionId);
     }
 

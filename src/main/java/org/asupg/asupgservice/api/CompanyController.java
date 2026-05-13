@@ -8,9 +8,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.asupg.asupgservice.model.CompanyDTO;
+import org.asupg.asupgservice.model.Company;
 import org.asupg.asupgservice.model.request.CompanyDebtSearchRequest;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
+import org.asupg.asupgservice.model.request.CompanyUpdateRequest;
 import org.asupg.asupgservice.model.request.CreateCompanyRequest;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
@@ -28,7 +29,7 @@ public interface CompanyController {
                     responseCode = "201",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = CompanyDTO.class)
+                            schema = @Schema(implementation = Company.class)
                     )
             ),
             @ApiResponse(
@@ -98,7 +99,7 @@ public interface CompanyController {
                     )
             )
     })
-    ResponseEntity<CompanyDTO> createCompany(CreateCompanyRequest createCompanyRequest);
+    ResponseEntity<Company> createCompany(CreateCompanyRequest createCompanyRequest);
 
     @Operation(
             summary = "Get companies", description = "Retrieves a list of companies with filtering and pagination", security = @SecurityRequirement(name = "bearerAuth")
@@ -152,7 +153,7 @@ public interface CompanyController {
                     responseCode = "200",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = CompanyDTO.class)
+                            schema = @Schema(implementation = Company.class)
                     )
             ),
             @ApiResponse(
@@ -186,7 +187,95 @@ public interface CompanyController {
                     )
             )
     })
-    ResponseEntity<CompanyDTO> getCompany(String id);
+    ResponseEntity<Company> getCompany(String id);
+
+    @Operation(
+            summary = "Update company", description = "Updates a company by its INN", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Company.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 404,
+                                        "error": "Validation failed",
+                                        "message": "Company with id: 123456789 not found",
+                                        "path": "/api/asupg-service/v1/companies/123456789"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<Company> updateCompany(String id, CompanyUpdateRequest companyUpdateRequest);
+
+    @Operation(
+            summary = "Delete company", description = "Deletes a company by its INN", security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Company.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 401,
+                                        "error": "Authentication failed",
+                                        "message": "Invalid or expired JWT token",
+                                        "path": "/api/asupg-service/v1/companies"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    content = @Content(
+                            mediaType = "application/json",
+                            examples = @ExampleObject("""
+                                    {
+                                        "timestamp": "timestamp",
+                                        "status": 404,
+                                        "error": "Validation failed",
+                                        "message": "Company with id: 123456789 not found",
+                                        "path": "/api/asupg-service/v1/companies/123456789"
+                                    }
+                                    """)
+                    )
+            )
+    })
+    ResponseEntity<Company> deleteCompany(String id);
 
     @Operation(
             summary = "Get balance of a company", description = "Retrieves current balance of the company with a monthly breakdown", security = @SecurityRequirement(name = "bearerAuth")

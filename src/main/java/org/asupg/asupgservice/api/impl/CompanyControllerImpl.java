@@ -1,10 +1,11 @@
 package org.asupg.asupgservice.api.impl;
 
 import org.asupg.asupgservice.api.CompanyController;
-import org.asupg.asupgservice.model.CompanyDTO;
+import org.asupg.asupgservice.model.Company;
 import org.asupg.asupgservice.model.SortOrder;
 import org.asupg.asupgservice.model.request.CompanyDebtSearchRequest;
 import org.asupg.asupgservice.model.request.CompanySearchRequest;
+import org.asupg.asupgservice.model.request.CompanyUpdateRequest;
 import org.asupg.asupgservice.model.request.CreateCompanyRequest;
 import org.asupg.asupgservice.model.response.CompanyBalanceResponse;
 import org.asupg.asupgservice.model.response.CompanyDebtResponse;
@@ -30,17 +31,17 @@ public class CompanyControllerImpl implements CompanyController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<CompanyDTO> createCompany(
+    public ResponseEntity<Company> createCompany(
             @Validated @RequestBody CreateCompanyRequest createCompanyRequest
     ) {
-        CompanyDTO companyDTO = companyService.createCompany(
+        Company company = companyService.createCompany(
                 createCompanyRequest.getInn(),
                 createCompanyRequest.getName(),
                 createCompanyRequest.getEmail(),
                 createCompanyRequest.getPhone()
         );
 
-        return new ResponseEntity<>(companyDTO, HttpStatus.CREATED);
+        return new ResponseEntity<>(company, HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -64,8 +65,34 @@ public class CompanyControllerImpl implements CompanyController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<CompanyDTO> getCompany(@PathVariable String id) {
-        CompanyDTO company = companyService.getCompany(id);
+    public ResponseEntity<Company> getCompany(@PathVariable String id) {
+        Company company = companyService.getCompany(id);
+
+        return new ResponseEntity<>(company, HttpStatus.OK);
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Company> updateCompany(
+            @PathVariable String id,
+            @Validated @RequestBody CompanyUpdateRequest companyUpdateRequest
+    ) {
+        Company company = companyService.updateCompany(
+                id,
+                companyUpdateRequest.getName(),
+                companyUpdateRequest.getCurrentBalance(),
+                companyUpdateRequest.getStatus(),
+                companyUpdateRequest.getEmail(),
+                companyUpdateRequest.getPhone()
+        );
+
+        return new ResponseEntity<>(company, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Company> deleteCompany(@PathVariable String id) {
+        Company company = companyService.deleteCompany(id);
 
         return new ResponseEntity<>(company, HttpStatus.OK);
     }

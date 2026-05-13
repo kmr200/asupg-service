@@ -3,7 +3,7 @@ package org.asupg.asupgservice.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asupg.asupgservice.exception.AppException;
-import org.asupg.asupgservice.model.UserDTO;
+import org.asupg.asupgservice.model.UserEntity;
 import org.asupg.asupgservice.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserDTO registerUser(
+    public UserEntity registerUser(
             String username,
             String firstName,
             String lastName,
@@ -33,7 +33,7 @@ public class AuthService {
             throw new AppException(409, "Конфликт", "Пользователь с именем: " + username + " уже зарегистрирован");
         }
 
-        UserDTO user = new UserDTO(
+        UserEntity userEntity = new UserEntity(
                 username,
                 firstName,
                 lastName,
@@ -41,32 +41,32 @@ public class AuthService {
                 roles
         );
 
-        user = userRepository.save(user);
+        userEntity = userRepository.save(userEntity);
 
-        return user;
+        return userEntity;
     }
 
-    public UserDTO deleteUser(String username) {
+    public UserEntity deleteUser(String username) {
         log.debug("Deleting user {}", username);
 
-        UserDTO user = getUser(username);
+        UserEntity userEntity = getUser(username);
 
-        userRepository.delete(user);
+        userRepository.delete(userEntity);
 
-        return user;
+        return userEntity;
     }
 
-    public UserDTO getUser(String username) {
+    public UserEntity getUser(String username) {
         return userRepository.findById(username).orElseThrow(
                 () -> new AppException(404, "Ошибка валидации", "Пользователь с именем: " + username + " не найден")
         );
     }
 
-    public List<UserDTO> getAllUsers() {
+    public List<UserEntity> getAllUsers() {
         return userRepository.findAll();
     }
 
-    public UserDTO updateUser(
+    public UserEntity updateUser(
             String username,
             String firstName,
             String lastName,
@@ -74,19 +74,19 @@ public class AuthService {
             Set<String> roles,
             Boolean locked
     ) {
-        UserDTO user = getUser(username);
+        UserEntity userEntity = getUser(username);
 
-        if (isNotEmpty(firstName)) user.setFirstName(firstName);
-        if (isNotEmpty(lastName)) user.setLastName(lastName);
+        if (isNotEmpty(firstName)) userEntity.setFirstName(firstName);
+        if (isNotEmpty(lastName)) userEntity.setLastName(lastName);
         if (isNotEmpty(password)) {
-            user.setPasswordHash(
+            userEntity.setPasswordHash(
                     passwordEncoder.encode(password)
             );
         }
-        if (roles != null && !roles.isEmpty()) user.setRoles(roles);
-        if (locked != null) user.setLocked(locked);
+        if (roles != null && !roles.isEmpty()) userEntity.setRoles(roles);
+        if (locked != null) userEntity.setLocked(locked);
 
-        return userRepository.save(user);
+        return userRepository.save(userEntity);
     }
 
     private boolean isNotEmpty(String string) {

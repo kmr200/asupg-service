@@ -29,7 +29,7 @@ import java.util.Set;
         @CompoundIndex(name = "enabled_idx", def = "{'enabled': 1}"),
         @CompoundIndex(name = "locked_idx", def = "{'locked': 1}")
 })
-public class UserDTO {
+public class UserEntity {
 
     @Id
     @Schema(description = "Username of the user", examples = "user")
@@ -64,7 +64,7 @@ public class UserDTO {
     @JsonIgnore
     private Long version;
 
-    public UserDTO(String username, String firstName, String lastName, String passwordHash, Set<String> roles) {
+    public UserEntity(String username, String firstName, String lastName, String passwordHash, Set<String> roles) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -83,8 +83,8 @@ public class UserDTO {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        UserDTO userDTO = (UserDTO) o;
-        return Objects.equals(username, userDTO.username);
+        UserEntity userEntity = (UserEntity) o;
+        return Objects.equals(username, userEntity.username);
     }
 
     @Override

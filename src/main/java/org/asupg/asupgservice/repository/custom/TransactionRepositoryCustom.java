@@ -8,12 +8,12 @@ import java.time.LocalDate;
 
 public interface TransactionRepositoryCustom {
 
-    MongoPageResponse<TransactionDTO> findTransactions(
+    MongoPageResponse<Transaction> findTransactions(
             LocalDate fromDate,
             LocalDate toDate,
             BigDecimal minAmount,
             BigDecimal maxAmount,
-            TransactionDTO.TransactionType transactionType,
+            Transaction.TransactionType transactionType,
             ReconciliationStatus reconciliationStatus,
             String counterpartyInn,
             Integer limit,

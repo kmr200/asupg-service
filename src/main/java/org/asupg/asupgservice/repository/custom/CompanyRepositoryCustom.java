@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 public interface CompanyRepositoryCustom {
 
-    MongoPageResponse<CompanyDTO> findCompaniesInDebt(
+    MongoPageResponse<Company> findCompaniesInDebt(
             BigDecimal minDebt,
             BigDecimal maxDebt,
             int limit,
@@ -16,7 +16,7 @@ public interface CompanyRepositoryCustom {
             String search
     );
 
-    MongoPageResponse<CompanyDTO> findCompanies(
+    MongoPageResponse<Company> findCompanies(
             BigDecimal minBalance,
             BigDecimal maxBalance,
             CompanyStatus status,

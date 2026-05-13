@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asupg.asupgservice.client.asupg.model.response.AsupgDevice;
 import org.asupg.asupgservice.exception.AppException;
-import org.asupg.asupgservice.model.DeviceDTO;
+import org.asupg.asupgservice.model.Device;
 import org.asupg.asupgservice.model.DeviceStatus;
 import org.asupg.asupgservice.model.response.DeviceSyncFailure;
 import org.asupg.asupgservice.model.response.DeviceSyncResponse;
@@ -13,6 +13,7 @@ import org.asupg.asupgservice.repository.DeviceRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -42,13 +43,13 @@ public class DeviceService {
     @Value("${asupg.billing.monthly-rate}")
     private Long billingMonthlyRate;
 
-    public DeviceDTO getDevice(String deviceId) {
+    public Device getDevice(String deviceId) {
         return deviceRepository.findById(deviceId).orElseThrow(
                 () -> new AppException(404, "Ошибка валидации", "Устройство с id: " + deviceId + " не найдено")
         );
     }
 
-    public DeviceDTO createDevice(
+    public Device createDevice(
             String deviceId,
             String deviceName,
             String companyInn,
@@ -64,7 +65,7 @@ public class DeviceService {
             throw new AppException(400, "Ошибка валидации", "Компании с ИНН: " + companyInn + " не существует");
         }
 
-        DeviceDTO deviceDTO = new DeviceDTO(
+        Device device = new Device(
                 deviceId,
                 deviceName,
                 companyInn,
@@ -77,11 +78,46 @@ public class DeviceService {
         );
 
         try {
-            return deviceRepository.insert(deviceDTO);
+            return deviceRepository.insert(device);
         } catch (DuplicateKeyException e) {
             log.info("Device with id {} already exists", deviceId);
             throw new AppException(409, "Конфликт", "Устройство с id: " + deviceId + " уже зарегистрировано");
         }
+    }
+
+    @Transactional
+    public Device updateDevice(
+            String inn,
+            String deviceName,
+            String companyInn,
+            BigDecimal monthlyRate,
+            YearMonth freeUntil,
+            DeviceStatus status
+    ) {
+        Device device = getDevice(inn);
+
+        if (deviceName != null && !deviceName.isBlank()) device.setDeviceName(deviceName);
+        if (monthlyRate != null) device.setMonthlyRate(monthlyRate);
+        if (freeUntil != null) device.setFreeUntil(freeUntil);
+        if (status != null) device.setStatus(status);
+
+        if (companyInn != null && !companyInn.isBlank() && !companyInn.equals(device.getCompanyInn())) {
+            companyRepository.findById(companyInn).orElseThrow(
+                    () -> new AppException(404, "Ресурс не найден", "Компания с id: " + companyInn + " не найдена")
+            );
+
+            device.setCompanyInn(companyInn);
+        }
+
+        return deviceRepository.save(device);
+    }
+
+    @Transactional
+    public Device deleteDevice(String inn) {
+        Device device = getDevice(inn);
+        deviceRepository.delete(device);
+
+        return device;
     }
 
     public DeviceSyncResponse syncDevicesWithCoreAsupg() {
@@ -92,8 +128,8 @@ public class DeviceService {
         try {
             Map<String, AsupgDevice> asupgDeviceMap = aggregateObjects(
                     asupgCoreService.retrieveDevices(), AsupgDevice::getObjectGuid);
-            Map<String, DeviceDTO> deviceMap = aggregateObjects(
-                    deviceRepository.findAll(), DeviceDTO::getDeviceId);
+            Map<String, Device> deviceMap = aggregateObjects(
+                    deviceRepository.findAll(), Device::getDeviceId);
 
             return processDiff(asupgDeviceMap, deviceMap);
 
@@ -109,12 +145,12 @@ public class DeviceService {
         }
     }
 
-    private DeviceSyncResponse processDiff(Map<String, AsupgDevice> asupgDeviceMap, Map<String, DeviceDTO> deviceMap) {
-        List<DeviceDTO> updatedDevices = new ArrayList<>();
+    private DeviceSyncResponse processDiff(Map<String, AsupgDevice> asupgDeviceMap, Map<String, Device> deviceMap) {
+        List<Device> updatedDevices = new ArrayList<>();
         List<DeviceSyncFailure> failures = new ArrayList<>();
 
         for (String key : deviceMap.keySet()) {
-            DeviceDTO device = deviceMap.get(key);
+            Device device = deviceMap.get(key);
 
             if (asupgDeviceMap.containsKey(key)) {
                 AsupgDevice asupgDevice = asupgDeviceMap.get(key);
@@ -157,7 +193,7 @@ public class DeviceService {
                 ));
     }
 
-    private boolean isDeviceOutOfSync(DeviceDTO device, AsupgDevice asupgDevice, DeviceStatus asupgDeviceStatus) {
+    private boolean isDeviceOutOfSync(Device device, AsupgDevice asupgDevice, DeviceStatus asupgDeviceStatus) {
         DeviceStatus deviceStatus = device.getStatus();
 
         return deviceStatus != asupgDeviceStatus ||

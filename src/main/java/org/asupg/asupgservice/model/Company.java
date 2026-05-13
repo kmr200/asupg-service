@@ -60,7 +60,7 @@ public class CompanyDTO {
     @JsonIgnore
     private Long version;
 
-    public CompanyDTO(
+    public Company(
             String inn,
             String name,
             CompanyStatus status,
@@ -78,7 +78,7 @@ public class CompanyDTO {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        CompanyDTO that = (CompanyDTO) o;
+        Company that = (Company) o;
         return Objects.equals(inn, that.inn);
     }
 

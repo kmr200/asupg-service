@@ -37,7 +37,7 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
     private final PaginationUtil paginationUtil;
 
     @Override
-    public MongoPageResponse<CompanyDTO> findCompaniesInDebt(
+    public MongoPageResponse<Company> findCompaniesInDebt(
             BigDecimal minBalance,
             BigDecimal maxBalance,
             int limit,
@@ -64,12 +64,12 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
         paginationUtil.applySorting(query, sortBy.getValue(), direction, limit);
         paginationUtil.applyLogicalCriteria(query, logicalCriteria, cursor, sortBy, direction);
 
-        List<CompanyDTO> results = mongoTemplate.find(query, CompanyDTO.class);
-        return paginationUtil.buildPage(results, limit, sortBy, CompanyDTO::getInn);
+        List<Company> results = mongoTemplate.find(query, Company.class);
+        return paginationUtil.buildPage(results, limit, sortBy, Company::getInn);
     }
 
     @Override
-    public MongoPageResponse<CompanyDTO> findCompanies(
+    public MongoPageResponse<Company> findCompanies(
             BigDecimal minBalance,
             BigDecimal maxBalance,
             CompanyStatus status,
@@ -107,8 +107,8 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
         paginationUtil.applySorting(query, sortField, direction, limit);
         paginationUtil.applyLogicalCriteria(query, logicalCriteria, cursor, effectiveSortBy, direction);
 
-        List<CompanyDTO> results = mongoTemplate.find(query, CompanyDTO.class);
-        return paginationUtil.buildPage(results, limit, effectiveSortBy, CompanyDTO::getInn);
+        List<Company> results = mongoTemplate.find(query, Company.class);
+        return paginationUtil.buildPage(results, limit, effectiveSortBy, Company::getInn);
     }
 
     @Override
@@ -142,7 +142,7 @@ public class CompanyRepositoryImpl implements CompanyRepositoryCustom {
                         ).as("companySummary")
         );
 
-        return mongoTemplate.aggregate(aggregation, CompanyDTO.class, CompanyDashboardResult.class)
+        return mongoTemplate.aggregate(aggregation, Company.class, CompanyDashboardResult.class)
                 .getUniqueMappedResult();
     }
 

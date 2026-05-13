@@ -11,7 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.asupg.asupgservice.model.CompanyDTO;
+import org.asupg.asupgservice.model.Company;
 import org.asupg.asupgservice.model.CompanyStatus;
 import org.asupg.asupgservice.model.SortOrder;
 
@@ -56,26 +56,26 @@ public class CompanySearchRequest {
 
     @AllArgsConstructor
     @Getter
-    public enum SortBy implements SortableField<CompanyDTO> {
+    public enum SortBy implements SortableField<Company> {
 
         CURRENT_BALANCE(
                 "currentBalance",
-                CompanyDTO::getCurrentBalance,
+                Company::getCurrentBalance,
                 BigDecimal::new
         ),
         INN(
                 "inn",
-                CompanyDTO::getInn,
+                Company::getInn,
                 s -> s
         ),
         NAME(
                 "name",
-                CompanyDTO::getName,
+                Company::getName,
                 s -> s
         );
 
         private final String mongoField;
-        private final Function<CompanyDTO, Object> extractor;
+        private final Function<Company, Object> extractor;
         private final Function<String, Object> parser;
 
         @JsonCreator

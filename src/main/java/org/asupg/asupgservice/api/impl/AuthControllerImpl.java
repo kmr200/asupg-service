@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.asupg.asupgservice.api.AuthController;
 import org.asupg.asupgservice.exception.AppException;
-import org.asupg.asupgservice.model.UserDTO;
+import org.asupg.asupgservice.model.UserEntity;
 import org.asupg.asupgservice.model.request.LoginRequest;
 import org.asupg.asupgservice.model.request.RegisterUserRequest;
 import org.asupg.asupgservice.model.request.UpdateUserRequest;
@@ -88,10 +88,10 @@ public class AuthControllerImpl implements AuthController {
 
     @PostMapping("/register")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDTO> register(
+    public ResponseEntity<UserEntity> register(
             @Validated @RequestBody RegisterUserRequest registerUserRequest
     ) {
-        UserDTO user = authService.registerUser(
+        UserEntity userEntity = authService.registerUser(
                 registerUserRequest.getUsername(),
                 registerUserRequest.getFirstName(),
                 registerUserRequest.getLastName(),
@@ -99,42 +99,42 @@ public class AuthControllerImpl implements AuthController {
                 registerUserRequest.getRoles()
         );
 
-        return new ResponseEntity<>(user, HttpStatus.CREATED);
+        return new ResponseEntity<>(userEntity, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        List<UserDTO> users = authService.getAllUsers();
+    public ResponseEntity<List<UserEntity>> getAllUsers() {
+        List<UserEntity> userEntities = authService.getAllUsers();
 
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        return new ResponseEntity<>(userEntities, HttpStatus.OK);
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<UserDTO> getUser(
+    public ResponseEntity<UserEntity> getUser(
             @PathVariable String username
     ) {
-        UserDTO user = authService.getUser(username);
+        UserEntity userEntity = authService.getUser(username);
 
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        return new ResponseEntity<>(userEntity, HttpStatus.OK);
     }
 
     @DeleteMapping("/{username}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDTO> deleteUser(
+    public ResponseEntity<UserEntity> deleteUser(
             @PathVariable String username
     ) {
-        UserDTO user = authService.deleteUser(username);
+        UserEntity userEntity = authService.deleteUser(username);
 
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        return new ResponseEntity<>(userEntity, HttpStatus.OK);
     }
 
     @PatchMapping("/{username}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<UserDTO> updateUser(
+    public ResponseEntity<UserEntity> updateUser(
             @PathVariable String username,
             @Validated @RequestBody UpdateUserRequest updateUserRequest
     ) {
-        UserDTO user = authService.updateUser(
+        UserEntity userEntity = authService.updateUser(
                 username,
                 updateUserRequest.getFirstName(),
                 updateUserRequest.getLastName(),
@@ -143,7 +143,7 @@ public class AuthControllerImpl implements AuthController {
                 updateUserRequest.getLocked()
         );
 
-        return new ResponseEntity<>(user, HttpStatus.OK);
+        return new ResponseEntity<>(userEntity, HttpStatus.OK);
     }
 
 }

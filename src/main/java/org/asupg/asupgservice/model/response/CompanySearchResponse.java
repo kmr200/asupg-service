@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.asupg.asupgservice.model.CompanyDTO;
+import org.asupg.asupgservice.model.Company;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class CompanySearchResponse {
 
     @Schema(description = "List of companies")
-    List<CompanyDTO> companies;
+    List<Company> companies;
 
     @Schema(description = "Amount of companies in current page", example = "1")
     int count;
@@ -28,7 +28,7 @@ public class CompanySearchResponse {
     @Schema(description = "Cursor token to retrieve next page", example = "token")
     String nextCursor;
 
-    public CompanySearchResponse(List<CompanyDTO> companies, String nextCursor) {
+    public CompanySearchResponse(List<Company> companies, String nextCursor) {
         this.companies = companies;
         this.nextCursor = nextCursor;
         this.count = companies != null ? companies.size() : 0;

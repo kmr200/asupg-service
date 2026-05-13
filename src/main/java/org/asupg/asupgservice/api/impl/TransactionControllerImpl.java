@@ -1,7 +1,7 @@
 package org.asupg.asupgservice.api.impl;
 
 import org.asupg.asupgservice.api.TransactionController;
-import org.asupg.asupgservice.model.TransactionDTO;
+import org.asupg.asupgservice.model.Transaction;
 import org.asupg.asupgservice.model.request.TransactionSearchRequest;
 import org.asupg.asupgservice.model.response.TransactionSearchResponse;
 import org.asupg.asupgservice.service.TransactionService;
@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,8 +24,8 @@ public class TransactionControllerImpl implements TransactionController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    public ResponseEntity<TransactionDTO> getTransaction(@PathVariable String id) {
-        TransactionDTO transaction = transactionService.getTransactionById(id);
+    public ResponseEntity<Transaction> getTransaction(@PathVariable String id) {
+        Transaction transaction = transactionService.getTransactionById(id);
 
         return new ResponseEntity<>(transaction, HttpStatus.OK);
     }
@@ -56,12 +55,12 @@ public class TransactionControllerImpl implements TransactionController {
 
     @PatchMapping("/{id}/company")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TransactionDTO> reassignTransaction(
+    public ResponseEntity<Transaction> reassignTransaction(
             @PathVariable String id,
             @RequestParam String companyInn,
             @AuthenticationPrincipal String username
     ) {
-        TransactionDTO updatedTransaction = transactionService.reassignTransaction(
+        Transaction updatedTransaction = transactionService.reassignTransaction(
                 id,
                 companyInn,
                 username

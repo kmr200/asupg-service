@@ -42,12 +42,12 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
     private final MongoTemplate mongoTemplate;
     private final PaginationUtil paginationUtil;
 
-    public MongoPageResponse<TransactionDTO> findTransactions(
+    public MongoPageResponse<Transaction> findTransactions(
             LocalDate fromDate,
             LocalDate toDate,
             BigDecimal minAmount,
             BigDecimal maxAmount,
-            TransactionDTO.TransactionType transactionType,
+            Transaction.TransactionType transactionType,
             ReconciliationStatus reconciliationStatus,
             String counterpartyInn,
             Integer limit,
@@ -115,8 +115,8 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
         paginationUtil.applySorting(query, sortField, direction, limit);
         paginationUtil.applyLogicalCriteria(query, logicalCriteria, cursor, effectiveSortBy, direction);
 
-        List<TransactionDTO> results = mongoTemplate.find(query, TransactionDTO.class);
-        return paginationUtil.buildPage(results, limit, effectiveSortBy, TransactionDTO::getTransactionId);
+        List<Transaction> results = mongoTemplate.find(query, Transaction.class);
+        return paginationUtil.buildPage(results, limit, effectiveSortBy, Transaction::getTransactionId);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
                 facet()
                         .and(
                                 match(Criteria.where(RECONCILIATION_STATUS_FIELD).exists(true).ne(null)
-                                        .and(TRANSACTION_TYPE_FIELD).is(TransactionDTO.TransactionType.BANK_PAYMENT)),
+                                        .and(TRANSACTION_TYPE_FIELD).is(Transaction.TransactionType.BANK_PAYMENT)),
                                 group(RECONCILIATION_STATUS_FIELD)
                                         .count().as("count")
                                         .sum(AMOUNT_FIELD).as("totalAmount"),
@@ -136,18 +136,18 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom {
                                 addFields().addField("month").withValue(DateOperators.DateToString.dateOf(DATE_FIELD).toString("%Y-%m")).build(),
                                 group("month")
                                         .sum(ConditionalOperators
-                                                .when(Criteria.where(TRANSACTION_TYPE_FIELD).is(TransactionDTO.TransactionType.MONTHLY_CHARGE))
+                                                .when(Criteria.where(TRANSACTION_TYPE_FIELD).is(Transaction.TransactionType.MONTHLY_CHARGE))
                                                 .then(ArithmeticOperators.Multiply.valueOf("$amount").multiplyBy(-1))
                                                 .otherwise(Decimal128.POSITIVE_ZERO)).as("totalCharged")
                                         .sum(ConditionalOperators
-                                                .when(Criteria.where(TRANSACTION_TYPE_FIELD).is(TransactionDTO.TransactionType.BANK_PAYMENT))
+                                                .when(Criteria.where(TRANSACTION_TYPE_FIELD).is(Transaction.TransactionType.BANK_PAYMENT))
                                                 .then("$amount").otherwise(Decimal128.POSITIVE_ZERO)).as("totalPaid"),
                                 project("totalCharged", "totalPaid").and("_id").as("month").andExclude("_id"),
                                 sort(Sort.Direction.ASC, "month")
                         ).as("monthlyTrend")
         );
 
-        return mongoTemplate.aggregate(aggregation, TransactionDTO.class, TransactionDashboardResult.class)
+        return mongoTemplate.aggregate(aggregation, Transaction.class, TransactionDashboardResult.class)
                 .getUniqueMappedResult();
     }
 

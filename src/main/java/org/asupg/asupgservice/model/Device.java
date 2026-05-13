@@ -28,7 +28,7 @@ import java.time.YearMonth;
         @CompoundIndex(def = "{ 'status': 1, 'freeUntil': 1, 'lastBilledMonth': 1, 'companyInn': 1 }")
 
 })
-public class DeviceDTO {
+public class Device {
 
     @Id
     @Schema(description = "UUID of the device", example = "78asd6f8as9d78f689asdf")
@@ -68,7 +68,7 @@ public class DeviceDTO {
     @JsonIgnore
     private Long version;
 
-    public DeviceDTO(
+    public Device(
             String deviceId,
             String deviceName,
             String companyInn,

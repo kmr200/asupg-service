@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.asupg.asupgservice.model.UserDTO;
+import org.asupg.asupgservice.model.UserEntity;
 import org.asupg.asupgservice.model.request.LoginRequest;
 import org.asupg.asupgservice.model.request.RegisterUserRequest;
 import org.asupg.asupgservice.model.request.UpdateUserRequest;
@@ -75,14 +75,14 @@ public interface AuthController {
     })
     ResponseEntity<LoginResponse> login(LoginRequest loginRequest);
 
-    @Operation(summary = "Register", description = "Register a new user", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Register", description = "Register a new userEntity", security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "User created successfully",
                     content = @Content(
-                            schema = @Schema(implementation = UserDTO.class)
+                            schema = @Schema(implementation = UserEntity.class)
                     )
             ),
-            @ApiResponse(responseCode = "403", description = "Unauthorized to create new user",
+            @ApiResponse(responseCode = "403", description = "Unauthorized to create new userEntity",
                     content = @Content(
                             mediaType = "application/json",
                             examples = @ExampleObject("""
@@ -111,7 +111,7 @@ public interface AuthController {
                     )
             )
     })
-    public ResponseEntity<UserDTO> register(RegisterUserRequest registerUserRequest);
+    public ResponseEntity<UserEntity> register(RegisterUserRequest registerUserRequest);
 
     @Operation(
             summary = "Get all users", description = "Retrieve list of all users"
@@ -137,16 +137,16 @@ public interface AuthController {
                     )
             )
     })
-    public ResponseEntity<List<UserDTO>> getAllUsers();
+    public ResponseEntity<List<UserEntity>> getAllUsers();
 
     @Operation(
-            summary = "Get user", description = "Retrieve user by its username"
+            summary = "Get userEntity", description = "Retrieve userEntity by its username"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User data retrieved",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = UserDTO.class)
+                            schema = @Schema(implementation = UserEntity.class)
                     )
             ),
             @ApiResponse(responseCode = "401", description = "Unauthorized",
@@ -178,16 +178,16 @@ public interface AuthController {
                     )
             )
     })
-    public ResponseEntity<UserDTO> getUser(String username);
+    public ResponseEntity<UserEntity> getUser(String username);
 
     @Operation(
-            summary = "Delete user", description = "Deletes user from the system"
+            summary = "Delete userEntity", description = "Deletes userEntity from the system"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "User deleted",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = UserDTO.class)
+                            schema = @Schema(implementation = UserEntity.class)
                     )
             ),
             @ApiResponse(responseCode = "401", description = "Unauthorized",
@@ -219,16 +219,16 @@ public interface AuthController {
                     )
             )
     })
-    public ResponseEntity<UserDTO> deleteUser(String username);
+    public ResponseEntity<UserEntity> deleteUser(String username);
 
     @Operation(
-            summary = "Update user", description = "Updates users profile"
+            summary = "Update userEntity", description = "Updates users profile"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Token generated",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = UserDTO.class)
+                            schema = @Schema(implementation = UserEntity.class)
                     )
             ),
             @ApiResponse(responseCode = "401", description = "Unauthorized",
@@ -260,6 +260,6 @@ public interface AuthController {
                     )
             )
     })
-    public ResponseEntity<UserDTO> updateUser(String username, UpdateUserRequest updateUserRequest);
+    public ResponseEntity<UserEntity> updateUser(String username, UpdateUserRequest updateUserRequest);
 
 }

@@ -25,7 +25,7 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final CompanyRepository companyRepository;
 
-    public TransactionDTO getTransactionById(String id) {
+    public Transaction getTransactionById(String id) {
         return transactionRepository.findById(id).orElseThrow(
                 () -> new AppException(404, "Неверный идентификатор транзакции", "Транзакция с id: " + id + " не найдена")
         );
@@ -36,7 +36,7 @@ public class TransactionService {
             LocalDate toDate,
             BigDecimal minAmount,
             BigDecimal maxAmount,
-            TransactionDTO.TransactionType transactionType,
+            Transaction.TransactionType transactionType,
             ReconciliationStatus reconciliationStatus,
             String counterpartyInn,
             Integer limit,
@@ -46,7 +46,7 @@ public class TransactionService {
             String search
     ) {
 
-        MongoPageResponse<TransactionDTO> page;
+        MongoPageResponse<Transaction> page;
 
         page = transactionRepository.findTransactions(
                 fromDate,
@@ -67,19 +67,19 @@ public class TransactionService {
     }
 
     @Transactional
-    public TransactionDTO reassignTransaction(String id, String companyInn, String username) {
-        TransactionDTO transaction = getTransactionById(id);
+    public Transaction reassignTransaction(String id, String companyInn, String username) {
+        Transaction transaction = getTransactionById(id);
         String oldCompanyInn = transaction.getCounterpartyInn();
 
         if (companyInn.equals(oldCompanyInn)) {
             throw new AppException(400, "Ошибка валидации", "Транзакция уже привязана к компании с ИНН: " + companyInn);
         }
 
-        CompanyDTO newCompany = getCompany(companyInn);
+        Company newCompany = getCompany(companyInn);
 
         // Subtract from old company if previously assigned
         if (transaction.getReconciliation().getStatus() == ReconciliationStatus.MATCHED) {
-            CompanyDTO oldCompany = getCompany(oldCompanyInn);
+            Company oldCompany = getCompany(oldCompanyInn);
             oldCompany.setCurrentBalance(oldCompany.getCurrentBalance().subtract(transaction.getAmount()));
             companyRepository.save(oldCompany);
             logger.info("Subtracted {} from company {}", oldCompanyInn, transaction.getAmount());
@@ -93,14 +93,14 @@ public class TransactionService {
         transaction.setCounterpartyInn(companyInn);
         transaction.setCounterpartyName(newCompany.getName());
 
-        ReconciliationDTO reconciliation = transaction.getReconciliation();
+        Reconciliation reconciliation = transaction.getReconciliation();
         reconciliation.setStatus(ReconciliationStatus.MANUALLY_FIXED);
         reconciliation.setManual(true);
         reconciliation.setUpdatedBy(username);
         reconciliation.setUpdatedAt(LocalDateTime.now());
         transaction.setReconciliation(reconciliation);
 
-        TransactionDTO updated = transactionRepository.save(transaction);
+        Transaction updated = transactionRepository.save(transaction);
 
         logger.info("Transaction {} reassigned from {} to {} by {}",
             id, oldCompanyInn, companyInn, username
@@ -109,7 +109,7 @@ public class TransactionService {
         return updated;
     }
 
-    private CompanyDTO getCompany(String id) {
+    private Company getCompany(String id) {
         logger.debug("Get company with id {}", id);
         return companyRepository.findById(id).orElseThrow(
                 () -> new AppException(404, "Ошибка валидации", "Компания с id: " + id + " не найдена")

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.asupg.asupgservice.model.DeviceDTO;
+import org.asupg.asupgservice.model.Device;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,7 +38,7 @@ public class CompanyBalanceResponse {
     private BalanceStatus balanceStatus;
 
     @Schema(description = "List of devices assigned to company", example = "CREDIT")
-    private List<DeviceDTO> devices;
+    private List<Device> devices;
 
     // Simple constructor
     public CompanyBalanceResponse(String inn, String name, BigDecimal balance) {
@@ -62,7 +62,7 @@ public class CompanyBalanceResponse {
             Long monthsElapsed,
             List<MonthlyCharge> monthlyBreakdown,
             BigDecimal monthlyRate,
-            List<DeviceDTO> devices
+            List<Device> devices
     ) {
         this.inn = inn;
         this.name = name;
